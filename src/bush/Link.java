@@ -68,10 +68,21 @@ public class Link
         return getTT(x.getX());
     }
     
+    public double getDeriv_TT(double x)
+    {
+        return fftime * alpha * beta / capacity * Math.pow(x / capacity, beta - 1);
+    }
+    
+    public double getDeriv_TT()
+    {
+        return getDeriv_TT(x.getX());
+    }
+    
     public double getInt_TT(double x)
     {
         return fftime * x + alpha * fftime / (beta + 1) * Math.pow(x / capacity, beta+1);
     }
+    
     
     public Node getSource()
     {

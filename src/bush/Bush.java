@@ -8,6 +8,7 @@ package bush;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -143,6 +144,92 @@ public class Bush
         }
         
         return output;
+    }
+    
+    public void swapFlows()
+    {
+        Tree min = minUsedPath();
+        Tree max = maxUsedPath();
+        
+        // start and end of common path segments
+        Node m = null;
+        Node n = null;
+        
+        for(Node s : network.getDemand().getDests(origin))
+        {
+            n = s;
+            while(n != origin)
+            {
+                Iterable<Link> min_iter = min.iterator(n);
+                Iterable<Link> max_iter = max.iterator(n);
+
+                Set<Node> visited_min = new HashSet<Node>();
+
+
+                for(Link l : min_iter)
+                {
+                    visited_min.add(l.getSource());
+                }
+
+                for(Link l : max_iter)
+                {
+                    if(visited_min.contains(l.getSource()))
+                    {
+                        m = l.getSource();
+                        break;
+                    }
+                }
+
+                min_iter = min.iterator(n);
+                max_iter = max.iterator(n);
+
+                Path min_path = new Path();
+                Path max_path = new Path();
+
+                for(Link l : min_iter)
+                {
+                    min_path.add(l);
+                    if(l.getSource() == m)
+                    {
+                        break;
+                    }
+                }
+
+                for(Link l : max_iter)
+                {
+                    max_path.add(l);
+                    if(l.getSource() == m)
+                    {
+                        break;
+                    }
+                }
+
+                swapFlow(min_path, max_path);
+                n = m;
+            }
+        }
+    }
+    
+    public void swapFlow(Path min_path, Path max_path)
+    {
+        if(min_path.equals(max_path))
+        {
+            return;
+        }
+        
+        double max_moved = Integer.MAX_VALUE;
+        
+        double stepsize = 0.2;
+        
+        for(Link l : max_path)
+        {
+            max_moved = Math.min(l.bush_x, max_moved);
+            
+            double difference = max_path.getTT() - min_path.getTT();
+            
+            
+            
+        }
     }
     
     // acyclic shortest path

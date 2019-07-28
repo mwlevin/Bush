@@ -407,4 +407,10 @@ public class Network
         
         return output;
     }
+    
+    
+    public void algorithmB()
+    {
+        
+    }
 }
