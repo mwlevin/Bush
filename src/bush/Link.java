@@ -46,6 +46,7 @@ public class Link
     public Link(Link l, Node bush_source, Node bush_dest)
     {
         this(l.getId(), bush_source, bush_dest, l.fftime, l.capacity, l.alpha, l.beta, l.length);
+        this.x = l.x;
     }
     
     public int getId()
@@ -101,7 +102,7 @@ public class Link
     
     public String toString()
     {
-        return ""+id;
+        return "["+source+","+dest+"]";
     }
     
     public double getTT(double x)

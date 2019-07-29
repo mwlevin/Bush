@@ -29,6 +29,9 @@ public class Bush
     {
         this.origin = origin;
         this.nodes = nodes;
+        this.network = network;
+        
+        
     }
     
     public void topologicalSort()
@@ -36,30 +39,57 @@ public class Bush
         for(Node n : nodes)
         {
             n.top_order = -1;
+            n.temp_mark = false;
         }
         
-        List<Node> Q = new LinkedList<>();
+        order = nodes.size();
         
-        Q.add(origin);
+        int num_marked = 0;
         
-        int id = 0;
-        
-        while(!Q.isEmpty())
+        while(num_marked < nodes.size())
         {
-            Node u = Q.remove(0);
-            u.top_order = id++;
-            
-            for(Link uv : u.getOutgoing())
+            for(Node n : nodes)
             {
-                Node v = uv.getDest();
-                if(v.top_order == -1)
+                if(n.top_order == -1)
                 {
-                    Q.add(v);
+                    num_marked += visit(n);
                 }
             }
         }
         
+        
+        
         Collections.sort(nodes);
+
+    }
+    
+    int order = 0;
+    
+    public int visit(Node u)
+    {
+        if(u.top_order >= 0)
+        {
+            return 0;
+        }
+        if(u.temp_mark)
+        {
+            throw new RuntimeException("Not DAG");
+        }
+        
+        u.temp_mark = true;
+        
+        int output = 0;
+        
+        for(Link uv : u.getOutgoing())
+        {
+            output += visit(uv.getDest());
+        }
+        
+        u.temp_mark = false;
+        u.top_order = order--;
+        output++;
+        
+        return output;
     }
     
     public Tree minUsedPath()
@@ -210,11 +240,14 @@ public class Bush
         }
     }
     
-    public void swapFlow(Path min_path, Path max_path)
+    /**
+     * return whether flow was swapped
+     */
+    public boolean swapFlow(Path min_path, Path max_path)
     {
         if(min_path.equals(max_path))
         {
-            return;
+            return false;
         }
         
         double max_moved = Integer.MAX_VALUE;
@@ -224,17 +257,74 @@ public class Bush
         for(Link l : max_path)
         {
             max_moved = Math.min(l.bush_x, max_moved);
+        }
+        
+        
+        
+        double difference = max_path.getTT() - min_path.getTT();
+        
+        if(max_moved < 0.1 || difference < 0.1)
+        {
+            return false;
+        }
+
+        while(difference > 0.1)
+        {
+            double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
+
+            double y = Math.min(max_moved, stepsize * difference / deriv);
+
+            max_path.addFlow(-y);
+            min_path.addFlow(y);
+
+            max_moved -= y;
+
+            difference = max_path.getTT() - min_path.getTT();
+        }
+        
+        return true;
+        
+    }
+    
+    public void loadDemand(Node r)
+    {
+        shortestPath();
+        
+
+        Demand demand = network.getDemand();
+        
+        for(Node s : demand.getDests(r))
+        {
+            double d = demand.getDemand(r, s);
             
-            double difference = max_path.getTT() - min_path.getTT();
+            Node curr = null;
+            
+            for(Node n : nodes)
+            {
+                if(n.getId() == s.getId())
+                {
+                    curr = n;
+                    break;
+                }
+            }
             
             
-            
+            while(curr != origin)
+            {
+                Link uv = curr.pred;
+                uv.x.addX(d);
+                curr = uv.getSource();
+            }
         }
     }
     
     // acyclic shortest path
     public void shortestPath()
     {
+        topologicalSort();
+        
+        
+        
         for(Node u : nodes)
         {
             u.cost = Integer.MAX_VALUE;
@@ -255,6 +345,8 @@ public class Bush
                     v.cost = temp;
                     v.pred = uv;
                 }
+                
+                //System.out.println("testing "+uv+" "+u.cost+" "+temp+" "+nodes.contains(v)+" "+v.cost);
             }
         }
     }

@@ -25,6 +25,14 @@ public class Path extends ArrayList<Link>
         return output;
     }
     
+    public void addFlow(double y)
+    {
+        for(Link l : this)
+        {
+            l.x.addX(y);
+        }
+    }
+    
     public double getTT()
     {
         double output = 0.0;

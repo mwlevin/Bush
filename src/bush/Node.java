@@ -15,35 +15,34 @@ import java.util.Set;
 public class Node implements Comparable<Node>
 {
     private int id;
+    private String name;
     
     public int top_order;
     
     public double cost;
     public Link pred;
     
+    
+    public boolean temp_mark;
+    
     private Set<Link> incoming, outgoing;
     
     public Node(int id)
     {
+        this(id, ""+id);
+    }
+    
+    public Node(int id, String name)
+    {
         this.id = id;
+        this.name = name;
         incoming = new HashSet<>();
         outgoing = new HashSet<>();
     }
     
     public int compareTo(Node rhs)
     {
-        if(cost < rhs.cost)
-        {
-            return -1;
-        }
-        else if(cost > rhs.cost)
-        {
-            return 1;
-        }
-        else
-        {
-            return id = rhs.id;
-        }
+        return top_order - rhs.top_order;
     }
     
     public boolean equals(Object o)
@@ -71,7 +70,7 @@ public class Node implements Comparable<Node>
     
     public String toString()
     {
-        return ""+id;
+        return ""+name;
     }
     
     public Set<Link> getIncoming()

@@ -113,40 +113,44 @@ public class Network
         dijkstras(r);
         
 
-        Set<Link> links = new HashSet<Link>();
+        Set<Link> newlinks = new HashSet<Link>();
         
-        List<Node> nodes = new ArrayList<>();        
+        List<Node> newnodes = new ArrayList<>();        
         Map<Node, Node> nodemap = new HashMap<>();
         
-        nodes.add(r);
-        Node clone = new Node(r.getId());
-        nodemap.put(r, clone);
         
+        Node clone = new Node(r.getId(), r.getId()+"-"+r.getId());
+        nodemap.put(r, clone);
+        newnodes.add(clone);
+        Node origin_clone = clone;
         
         for(Node n : nodes)
         {
             if(n.pred != null)
             {
-                links.add(n.pred);
+                newlinks.add(n.pred);
+                            
+                clone = new Node(n.getId(), n.getId()+"-"+r.getId());
                 
-                nodes.add(n);
-                clone = new Node(n.getId());
+                
                 nodemap.put(n, clone);
+                newnodes.add(clone);
             }
         }
         
-        for(Link l : links)
+        for(Link l : newlinks)
         {
-            links.add(new Link(l, nodemap.get(l.getSource()), nodemap.get(l.getDest())));
+            // the nodes will remember this link, no need to store it
+            new Link(l, nodemap.get(l.getSource()), nodemap.get(l.getDest()));
         }
         
         nodemap = null;
-        links = null;
+        newlinks = null;
         
         
         
         
-        Bush output = new Bush(r, nodes, this);
+        Bush output = new Bush(origin_clone, newnodes, this);
         
         return output;
     }
@@ -411,6 +415,16 @@ public class Network
     
     public void algorithmB()
     {
+        Map<Node, Bush> bushes = new HashMap<>();
         
+        // initial feasible bush
+        for(Node r : demand.getOrigins())
+        {
+            Bush bush;
+            bushes.put(r, bush = createBush(r));
+            bush.loadDemand(r);
+        }
     }
+    
+ 
 }

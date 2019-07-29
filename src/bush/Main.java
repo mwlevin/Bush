@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException
     {
         Network test = new Network("SiouxFalls");
-        test.frankWolfe(30, 0);
+        test.algorithmB();
         
     }
     
