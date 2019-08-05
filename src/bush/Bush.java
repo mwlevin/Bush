@@ -25,12 +25,14 @@ public class Bush
     
     private Network network;
     
-    public Bush(Node origin, List<Node> nodes, Network network)
+    private Set<Node> dests;
+    
+    public Bush(Node origin, List<Node> nodes, Set<Node> dests, Network network)
     {
         this.origin = origin;
         this.nodes = nodes;
         this.network = network;
-        
+        this.dests = dests;
         
     }
     
@@ -180,14 +182,16 @@ public class Bush
     {
         Tree min = minUsedPath();
         Tree max = maxUsedPath();
-        
+
+
         // start and end of common path segments
         Node m = null;
         Node n = null;
         
-        for(Node s : network.getDemand().getDests(origin))
+        for(Node s : dests)
         {
             n = s;
+            
             while(n != origin)
             {
                 Iterable<Link> min_iter = min.iterator(n);
@@ -200,6 +204,8 @@ public class Bush
                 {
                     visited_min.add(l.getSource());
                 }
+                
+                System.out.println(visited_min);
 
                 for(Link l : max_iter)
                 {
@@ -209,6 +215,8 @@ public class Bush
                         break;
                     }
                 }
+                
+                
 
                 min_iter = min.iterator(n);
                 max_iter = max.iterator(n);
@@ -234,10 +242,14 @@ public class Bush
                     }
                 }
 
+                System.out.println(n+" "+m+" "+min_path+" "+max_path);
+                
                 swapFlow(min_path, max_path);
                 n = m;
+                
             }
         }
+        System.exit(0);
     }
     
     /**
@@ -273,14 +285,28 @@ public class Bush
             double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
 
             double y = Math.min(max_moved, stepsize * difference / deriv);
+            
+            System.out.println(deriv+" "+y);
 
-            max_path.addFlow(-y);
-            min_path.addFlow(y);
+            for(Link l : max_path)
+            {
+                l.x.addX(-y);
+                l.bush_x -= y;
+            }
+            
+            for(Link l : min_path)
+            {
+                l.x.addX(y);
+                l.bush_x += y;
+            }
+
 
             max_moved -= y;
 
             difference = max_path.getTT() - min_path.getTT();
         }
+        
+        System.exit(0);
         
         return true;
         
@@ -293,9 +319,9 @@ public class Bush
 
         Demand demand = network.getDemand();
         
-        for(Node s : demand.getDests(r))
+        for(Node s : dests)
         {
-            double d = demand.getDemand(r, s);
+            double d = demand.getDemand(r, s.cloned);
             
             Node curr = null;
             
@@ -313,6 +339,7 @@ public class Bush
             {
                 Link uv = curr.pred;
                 uv.x.addX(d);
+                uv.bush_x += d;
                 curr = uv.getSource();
             }
         }

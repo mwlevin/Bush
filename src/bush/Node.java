@@ -16,6 +16,7 @@ public class Node implements Comparable<Node>
 {
     private int id;
     private String name;
+    public Node cloned;
     
     public int top_order;
     
@@ -32,6 +33,7 @@ public class Node implements Comparable<Node>
         this(id, ""+id);
     }
     
+
     public Node(int id, String name)
     {
         this.id = id;

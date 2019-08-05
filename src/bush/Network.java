@@ -123,6 +123,11 @@ public class Network
         nodemap.put(r, clone);
         newnodes.add(clone);
         Node origin_clone = clone;
+        origin_clone.cloned = r;
+        
+        Set<Node> dests = new HashSet<>();
+        
+        Set<Node> key_dests = demand.getDests(r);
         
         for(Node n : nodes)
         {
@@ -131,10 +136,15 @@ public class Network
                 newlinks.add(n.pred);
                             
                 clone = new Node(n.getId(), n.getId()+"-"+r.getId());
-                
+                clone.cloned = n;
                 
                 nodemap.put(n, clone);
                 newnodes.add(clone);
+                
+                if(key_dests.contains(n))
+                {
+                    dests.add(clone);
+                }
             }
         }
         
@@ -150,7 +160,7 @@ public class Network
         
         
         
-        Bush output = new Bush(origin_clone, newnodes, this);
+        Bush output = new Bush(origin_clone, newnodes, dests, this);
         
         return output;
     }
@@ -423,6 +433,12 @@ public class Network
             Bush bush;
             bushes.put(r, bush = createBush(r));
             bush.loadDemand(r);
+        }
+        
+        for(Node r : bushes.keySet())
+        {
+            Bush bush = bushes.get(r);
+            bush.swapFlows();
         }
     }
     
