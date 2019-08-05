@@ -14,6 +14,9 @@ public class Link
     private int id;
     
     
+    public boolean inBush;
+    
+    
     public Flow x;
     
     public double bush_x;
@@ -41,12 +44,16 @@ public class Link
         
         source.addLink(this);
         dest.addLink(this);
+        
+        inBush = true;
     }
     
     public Link(Link l, Node bush_source, Node bush_dest)
     {
         this(l.getId(), bush_source, bush_dest, l.fftime, l.capacity, l.alpha, l.beta, l.length);
         this.x = l.x;
+        
+        inBush = false;
     }
     
     public int getId()

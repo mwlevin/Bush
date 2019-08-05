@@ -13,6 +13,18 @@ import java.util.ArrayList;
  */
 public class Path extends ArrayList<Link>
 {
+    private boolean backwards;
+    
+    public Path()
+    {
+        backwards = false;
+    }
+    
+    public Path(boolean backwards)
+    {
+        this.backwards = backwards;
+    }
+    
     public double getDeriv_TT()
     {
         double output = 0.0;
@@ -44,4 +56,30 @@ public class Path extends ArrayList<Link>
         
         return output;
     }
+    
+    
+    public String toString()
+    {
+        String output = "[";
+        if(!backwards)
+        {
+            for(Link l : this)
+            {
+                output += l.getSource()+", ";
+            }
+
+            output += get(size()-1).getDest()+"]";
+        }
+        else
+        {
+            for(int i = size()-1; i >= 0; i--)
+            {
+                output += get(i).getSource()+", ";
+            }
+            
+            output += get(size()-1).getDest()+"]";
+        }
+        return output;
+    }
+
 }

@@ -22,23 +22,39 @@ import java.util.Set;
  */
 public class Network 
 {
-    private Set<Node> nodes;
-    private Set<Link> links;
+    protected List<Node> nodes;
+    protected Set<Link> links;
     
     private Demand demand;
     
+    public Network(Network network)
+    {
+        nodes = new ArrayList<>();
+        links = new HashSet<>();
+        demand = network.demand;
+    }
     public Network(String name) throws IOException
     {
-        nodes = new HashSet<>();
+        nodes = new ArrayList<>();
         links = new HashSet<>();
         demand = new Demand();
         readNetwork(name);
     }
-    public Network(Set<Node> nodes, Set<Link> links, Demand demand)
+    public Network(List<Node> nodes, Set<Link> links, Demand demand)
     {
         this.nodes = nodes;
         this.links = links;
         this.demand = demand;
+    }
+    
+    public List<Node> getNodes()
+    {
+        return nodes;
+    }
+    
+    public Set<Link> getLinks()
+    {
+        return links;
     }
     
     public Demand getDemand()
@@ -108,6 +124,7 @@ public class Network
         return output;
     }
     
+    /*
     public Bush createBush(Node r)
     {
         dijkstras(r);
@@ -164,6 +181,7 @@ public class Network
         
         return output;
     }
+    */
     
     public void readNetwork(String name) throws IOException
     {
@@ -431,8 +449,7 @@ public class Network
         for(Node r : demand.getOrigins())
         {
             Bush bush;
-            bushes.put(r, bush = createBush(r));
-            bush.loadDemand(r);
+            bushes.put(r, bush = new Bush(r, this));
         }
         
         for(Node r : bushes.keySet())

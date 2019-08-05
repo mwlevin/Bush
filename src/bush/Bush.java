@@ -7,33 +7,54 @@ package bush;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  *
  * @author micha
  */
-public class Bush 
+public class Bush extends Network
 {
     private Node origin;
+
+    private Map<Node, Double> demand;
     
-    private List<Node> nodes;
-    
-    private Network network;
-    
-    private Set<Node> dests;
-    
-    public Bush(Node origin, List<Node> nodes, Set<Node> dests, Network network)
+    public Bush(Node origin_, Network network)
     {
-        this.origin = origin;
-        this.nodes = nodes;
-        this.network = network;
-        this.dests = dests;
+        super(network);
         
+        demand = new HashMap<>();
+        
+        Map<Integer, Node> nodesidmap = new HashMap<>();
+        
+        for(Node n : network.getNodes())
+        {
+            Node clone = new Node(n.getId(), n.getId()+"-"+origin_.getId());
+            nodesidmap.put(clone.getId(), clone);
+            nodes.add(clone);
+        }
+        
+        Demand demand_ = network.getDemand();
+        for(Node s : demand_.getDests(origin_))
+        {
+            demand.put(nodesidmap.get(s.getId()), demand_.getDemand(origin_, s));
+        }
+        
+        this.origin = nodesidmap.get(origin_.getId());
+        
+        for(Link l : network.getLinks())
+        {
+            links.add(new Link(l, nodesidmap.get(l.getSource().getId()), nodesidmap.get(l.getDest().getId())));
+        }
+        
+        
+        loadDemand();
     }
     
     public void topologicalSort()
@@ -82,7 +103,7 @@ public class Bush
         
         int output = 0;
         
-        for(Link uv : u.getOutgoing())
+        for(Link uv : u.getBushOutgoing())
         {
             output += visit(uv.getDest());
         }
@@ -108,12 +129,50 @@ public class Bush
         
         for(Node u : nodes)
         {
-            for(Link uv : u.getOutgoing())
+            for(Link uv : u.getBushOutgoing())
             {
                 if(uv.bush_x == 0)
                 {
                     continue;
                 }
+                
+                Node v = uv.getDest();
+                double temp = uv.getTT() + u.cost;
+                
+                if(temp < v.cost)
+                {
+                    v.cost = temp;
+                    v.pred = uv;
+                }
+            }
+        }
+        
+        Tree output = new Tree(origin);
+        
+        for(Node n : nodes)
+        {
+            output.put(n, n.pred);
+        }
+        
+        return output;
+    }
+    
+    public Tree minPath()
+    {
+        for(Node u : nodes)
+        {
+            u.cost = Integer.MAX_VALUE;
+            u.pred = null;
+        }
+        
+        origin.cost = 0;
+        
+        origin.cost = 0;
+        
+        for(Node u : nodes)
+        {
+            for(Link uv : u.getBushOutgoing())
+            {
                 
                 Node v = uv.getDest();
                 double temp = uv.getTT() + u.cost;
@@ -150,7 +209,7 @@ public class Bush
         
         for(Node u : nodes)
         {
-            for(Link uv : u.getOutgoing())
+            for(Link uv : u.getBushOutgoing())
             {
                 if(uv.bush_x == 0)
                 {
@@ -180,7 +239,9 @@ public class Bush
     
     public void swapFlows()
     {
-        Tree min = minUsedPath();
+        topologicalSort();
+        
+        Tree min = minPath();
         Tree max = maxUsedPath();
 
 
@@ -188,7 +249,7 @@ public class Bush
         Node m = null;
         Node n = null;
         
-        for(Node s : dests)
+        for(Node s : demand.keySet())
         {
             n = s;
             
@@ -221,8 +282,8 @@ public class Bush
                 min_iter = min.iterator(n);
                 max_iter = max.iterator(n);
 
-                Path min_path = new Path();
-                Path max_path = new Path();
+                Path min_path = new Path(true);
+                Path max_path = new Path(true);
 
                 for(Link l : min_iter)
                 {
@@ -249,7 +310,6 @@ public class Bush
                 
             }
         }
-        System.exit(0);
     }
     
     /**
@@ -306,22 +366,23 @@ public class Bush
             difference = max_path.getTT() - min_path.getTT();
         }
         
-        System.exit(0);
-        
+
         return true;
         
     }
     
-    public void loadDemand(Node r)
+    public void improveBush()
     {
-        shortestPath();
         
-
-        Demand demand = network.getDemand();
+    }
+    
+    public void loadDemand()
+    {
+        dijkstras(origin);
         
-        for(Node s : dests)
+        for(Node s : demand.keySet())
         {
-            double d = demand.getDemand(r, s.cloned);
+            double d = demand.get(s);
             
             Node curr = null;
             
@@ -340,6 +401,7 @@ public class Bush
                 Link uv = curr.pred;
                 uv.x.addX(d);
                 uv.bush_x += d;
+                uv.inBush = true;
                 curr = uv.getSource();
             }
         }
@@ -362,7 +424,7 @@ public class Bush
         
         for(Node u : nodes)
         {
-            for(Link uv : u.getOutgoing())
+            for(Link uv : u.getBushOutgoing())
             {
                 Node v = uv.getDest();
                 double temp = uv.getTT() + u.cost;

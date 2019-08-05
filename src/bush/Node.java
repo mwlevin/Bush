@@ -85,6 +85,37 @@ public class Node implements Comparable<Node>
         return outgoing;
     }
     
+    
+    public Set<Link> getBushOutgoing()
+    {
+        Set<Link> output = new HashSet<>();
+        
+        for(Link l : outgoing)
+        {
+            if(l.inBush)
+            {
+                output.add(l);
+            }
+        }
+        
+        return output;
+    }
+    
+    public Set<Link> getBushIncoming()
+    {
+        Set<Link> output = new HashSet<>();
+        
+        for(Link l : incoming)
+        {
+            if(l.inBush)
+            {
+                output.add(l);
+            }
+        }
+        
+        return output;
+    }
+    
     public int hashCode()
     {
         return id;
