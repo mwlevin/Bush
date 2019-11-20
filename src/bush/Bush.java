@@ -258,6 +258,8 @@ public class Bush
     
     public void equilibrate()
     {
+        System.out.println("Origin "+origin);
+        
         int swapIter = 0;
         
         double difference = Integer.MAX_VALUE;
@@ -271,12 +273,12 @@ public class Bush
             do
             {
                 difference = swapFlows();
-                System.out.println("\tSwap: "+String.format("%.2f", difference));
+                System.out.println("\t\tSwap: "+String.format("%.2f", difference));
                 swapIter ++;
             }
-            while(difference > 0.1);
+            while(difference > Params.bush_gap);
             
-            System.out.println(bushIter+"\t"+difference);
+            System.out.println("\t"+bushIter+"\t"+difference+"\t"+validateTopology());
             
             improveBush();
         }
@@ -387,7 +389,7 @@ public class Bush
         
 
 
-        while(max_moved >= 0.1 && difference >= 0.1)
+        while(max_moved >= Params.bush_gap && difference >= Params.bush_gap)
         {
             double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
             
@@ -472,7 +474,7 @@ public class Bush
                 //System.out.println("\t"+l.getSource().cost+" "+l.getDest().cost+"\t"+l.getTT());
             }
         }
-        System.out.println(validateTopology());
+
     }
     
     public void loadDemand()
