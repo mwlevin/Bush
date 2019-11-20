@@ -115,7 +115,7 @@ public class Bush
         }
         if(u.temp_mark)
         {
-            throw new RuntimeException("Not DAG");
+            throw new RuntimeException("Not DAG at "+u);
         }
         
         u.temp_mark = true;
@@ -258,12 +258,31 @@ public class Bush
     
     public void equilibrate()
     {
-        // needs to iterate
-        swapFlows();
-        improveBush();
+        int swapIter = 0;
+        
+        double difference = Integer.MAX_VALUE;
+        
+        for(int bushIter = 1; !(bushIter > 2 && swapIter < 2); bushIter++)
+        {
+            difference = 0.0;
+            
+            swapIter = 0;
+            
+            do
+            {
+                difference = swapFlows();
+                System.out.println("\tSwap: "+String.format("%.2f", difference));
+                swapIter ++;
+            }
+            while(difference > 0.1);
+            
+            System.out.println(bushIter+"\t"+difference);
+            
+            improveBush();
+        }
     }
     
-    public void swapFlows()
+    public double swapFlows()
     {
 
         topologicalSort();
@@ -275,6 +294,8 @@ public class Bush
         // start and end of common path segments
         Node m = null;
         Node n = null;
+        
+        double max_diff = 0.0;
         
         for(Node s : demand.keySet())
         {
@@ -332,21 +353,23 @@ public class Bush
 
                 //System.out.println(n+" "+m+" "+min_path+" "+max_path);
                 
-                swapFlow(min_path, max_path);
+                max_diff = Math.max(max_diff, swapFlow(min_path, max_path));
                 n = m;
                 
             }
         }
+        
+        return max_diff;
     }
     
     /**
      * return whether flow was swapped
      */
-    public boolean swapFlow(Path min_path, Path max_path)
+    public double swapFlow(Path min_path, Path max_path)
     {
         if(min_path.equals(max_path))
         {
-            return false;
+            return 0.0;
         }
         
         double max_moved = Integer.MAX_VALUE;
@@ -358,22 +381,20 @@ public class Bush
             max_moved = Math.min(getFlow(l), max_moved);
         }
         
-        
+        //System.out.println(max_path);
         
         double difference = max_path.getTT() - min_path.getTT();
         
-        if(max_moved < 0.1 || difference < 0.1)
-        {
-            return false;
-        }
 
-        while(difference > 0.1)
+
+        while(max_moved >= 0.1 && difference >= 0.1)
         {
             double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
+            
 
             double y = Math.min(max_moved, stepsize * difference / deriv);
             
-            System.out.println(deriv+" "+y);
+            //System.out.println(deriv+" "+y+" "+difference+" "+stepsize+" "+max_moved);
 
             for(Link l : max_path)
             {
@@ -389,34 +410,68 @@ public class Bush
             max_moved -= y;
 
             difference = max_path.getTT() - min_path.getTT();
+
+
         }
         
 
-        return true;
+        return difference;
         
+    }
+    
+    public boolean checkCost(Link l)
+    {
+        return l.getSource().cost + l.getTT() <= l.getDest().cost;
     }
     
     public void improveBush()
     {
 
+        
+        //Tree maxPath = maxUsedPath();
+        //Tree minPath = minPath();
+        
+        
+        //System.out.println(minPath.getPath(network.findNode(21)));
+        //System.out.println(minPath.getPath(network.findNode(22)));
+        
+        
+        
+        
         shortestPath();
+        
+        Set<Link> remove = new HashSet<>();
         
         for(Link l : flow.keySet())
         {
-            if(flow.get(l) == 0 && l.getSource().cost > l.getDest().cost)
+            if(flow.get(l) == 0 && !checkCost(l))
             {
-                flow.remove(l);
+                remove.add(l);
             }
+        }
+        
+        for(Link l : remove)
+        {
+            flow.remove(l);
         }
         
         for(Link l : network.links)
         {
-            if(!contains(l) && l.getSource().cost < l.getDest().cost)
+            if(!contains(l) && checkCost(l))
             {
                 flow.put(l, 0.0);
             }
         }
-        
+
+
+        for(Link l : flow.keySet())
+        {
+            if(l.getSource().getId() == 21 || l.getDest().getId() == 21)
+            {
+                //System.out.println(l+"\t"+flow.get(l));
+                //System.out.println("\t"+l.getSource().cost+" "+l.getDest().cost+"\t"+l.getTT());
+            }
+        }
         System.out.println(validateTopology());
     }
     
