@@ -20,6 +20,7 @@ public class Main {
     {
         Network test = new Network("SiouxFalls");
         test.algorithmB();
+
         
     }
     

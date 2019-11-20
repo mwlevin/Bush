@@ -320,24 +320,35 @@ public class Network
 
     }    
 
+    public void frankWolfe()
+    {
+        frankWolfe(100000, Params.epsilon);
+    }
+    
     public void frankWolfe(int max_iter, double min_gap)
     {
+        long time = System.nanoTime();
+        
         double gap = Integer.MAX_VALUE;
         int iter = 0;
         
-        System.out.println("Iter\tStep size\tGap");
+        System.out.println("Iter\tStep size\tAEC");
         
         do
         {
             iter++;
             
-            gap = calcSearchDirection();
+            calcSearchDirection();
             double lambda = calcStepSize(iter);
             update(lambda);
+            
+            gap = calcAEC();
             
             System.out.println(iter+"\t"+String.format("%.4f", lambda)+"\t"+String.format("%.4f", gap));
         }
         while((gap > min_gap || iter == 1) && iter < max_iter);
+        
+        System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+" s");
     }
     
     public double calcSearchDirection()
@@ -445,6 +456,8 @@ public class Network
     
     public void algorithmB()
     {
+        long time = System.nanoTime();
+        
         bushes = new HashMap<>();
         
         // initial feasible bush
@@ -477,6 +490,7 @@ public class Network
         }
         while(gap > Params.epsilon);
 
+        System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+" s");
     }
     
     public double calcAEC()

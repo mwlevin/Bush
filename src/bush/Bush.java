@@ -387,7 +387,7 @@ public class Bush
         
         double max_moved = Integer.MAX_VALUE;
         
-        double stepsize = 0.2;
+        double stepsize = 1;
         
         for(Link l : max_path)
         {
