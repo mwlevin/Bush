@@ -23,6 +23,11 @@ public class Demand extends HashMap<Node, HashMap<Node, Double>>
         
     }
     
+    public Map<Node, Double> getDemand(Node r)
+    {
+        return get(r);
+    }
+    
     public double getTotal()
     {
         return total;

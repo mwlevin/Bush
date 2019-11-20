@@ -450,13 +450,21 @@ public class Network
         {
             Bush bush;
             bushes.put(r, bush = new Bush(r, this));
+
         }
+        
         
         for(Node r : bushes.keySet())
         {
             Bush bush = bushes.get(r);
-            bush.swapFlows();
+            bush.equilibrate();
+            
+            if(true)
+            {
+                break;
+            }
         }
+
     }
     
  

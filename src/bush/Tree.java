@@ -43,9 +43,26 @@ public class Tree extends HashMap<Node, Link>
     /**
      * Iterates over the path (links) from Node r to Node s, in backwards order
      */
-    public Iterator<Link> trace(Node s)
+
+    public Iterable<Link> trace(Node s)
     {
-        return new PathIterator(s);
+        return new Iterable<Link>()
+        {
+            public Iterator<Link> iterator()
+            {
+                return new PathIterator(s);
+            }
+        };
+    }
+    
+    public Path getPath(Node s)
+    {
+        Path output = new Path();
+        for(Link curr : trace(s))
+        {
+            output.add(0, curr);
+        }
+        return output;
     }
     
     class PathIterator implements Iterator<Link>

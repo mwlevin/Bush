@@ -19,59 +19,64 @@ import java.util.Set;
  *
  * @author micha
  */
-public class Bush extends Network
+public class Bush
 {
     private Node origin;
 
     private Map<Node, Double> demand;
     
-    public Bush(Node origin_, Network network)
+    
+    private Map<Link, Double> flow;
+    
+    
+    private Network network;
+    
+    public Bush(Node origin, Network network)
     {
-        super(network);
+        
+        this.network = network;
         
         demand = new HashMap<>();
         
-        Map<Integer, Node> nodesidmap = new HashMap<>();
+
         
-        for(Node n : network.getNodes())
-        {
-            Node clone = new Node(n.getId(), n.getId()+"-"+origin_.getId());
-            nodesidmap.put(clone.getId(), clone);
-            nodes.add(clone);
-        }
+        demand = network.getDemand().getDemand(origin);
         
-        Demand demand_ = network.getDemand();
-        for(Node s : demand_.getDests(origin_))
-        {
-            demand.put(nodesidmap.get(s.getId()), demand_.getDemand(origin_, s));
-        }
+        this.origin = origin;
         
-        this.origin = nodesidmap.get(origin_.getId());
         
-        for(Link l : network.getLinks())
-        {
-            links.add(new Link(l, nodesidmap.get(l.getSource().getId()), nodesidmap.get(l.getDest().getId())));
-        }
+        flow = new HashMap<>();
         
         
         loadDemand();
+        
+        
+        
+        
+       
+    }
+    
+    
+    public boolean contains(Link l)
+    {
+        return flow.containsKey(l);
     }
     
     public void topologicalSort()
     {
-        for(Node n : nodes)
+        for(Node n : network.nodes)
         {
             n.top_order = -1;
             n.temp_mark = false;
         }
         
-        order = nodes.size();
+        order = network.nodes.size();
         
         int num_marked = 0;
         
-        while(num_marked < nodes.size())
+        while(num_marked < network.nodes.size())
         {
-            for(Node n : nodes)
+            for(Node n : network.nodes)
             {
                 if(n.top_order == -1)
                 {
@@ -82,8 +87,22 @@ public class Bush extends Network
         
         
         
-        Collections.sort(nodes);
+        Collections.sort(network.nodes);
 
+    }
+    
+    public boolean validateTopology()
+    {
+        topologicalSort();
+        
+        for(Link l : flow.keySet())
+        {
+            if(l.getSource().top_order > l.getDest().top_order)
+            {
+                return false;
+            }
+        }
+        return true;
     }
     
     int order = 0;
@@ -103,7 +122,7 @@ public class Bush extends Network
         
         int output = 0;
         
-        for(Link uv : u.getBushOutgoing())
+        for(Link uv : u.getBushOutgoing(this))
         {
             output += visit(uv.getDest());
         }
@@ -117,7 +136,7 @@ public class Bush extends Network
     
     public Tree minUsedPath()
     {
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -127,11 +146,11 @@ public class Bush extends Network
         
         origin.cost = 0;
         
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
-            for(Link uv : u.getBushOutgoing())
+            for(Link uv : u.getBushOutgoing(this))
             {
-                if(uv.bush_x == 0)
+                if(getFlow(uv) == 0)
                 {
                     continue;
                 }
@@ -149,7 +168,7 @@ public class Bush extends Network
         
         Tree output = new Tree(origin);
         
-        for(Node n : nodes)
+        for(Node n : network.nodes)
         {
             output.put(n, n.pred);
         }
@@ -159,7 +178,7 @@ public class Bush extends Network
     
     public Tree minPath()
     {
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -169,9 +188,9 @@ public class Bush extends Network
         
         origin.cost = 0;
         
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
-            for(Link uv : u.getBushOutgoing())
+            for(Link uv : u.getBushOutgoing(this))
             {
                 
                 Node v = uv.getDest();
@@ -187,7 +206,7 @@ public class Bush extends Network
         
         Tree output = new Tree(origin);
         
-        for(Node n : nodes)
+        for(Node n : network.nodes)
         {
             output.put(n, n.pred);
         }
@@ -197,7 +216,7 @@ public class Bush extends Network
     
     public Tree maxUsedPath()
     {
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MIN_VALUE;
             u.pred = null;
@@ -207,11 +226,11 @@ public class Bush extends Network
         
         origin.cost = 0;
         
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
-            for(Link uv : u.getBushOutgoing())
+            for(Link uv : u.getBushOutgoing(this))
             {
-                if(uv.bush_x == 0)
+                if(getFlow(uv) == 0)
                 {
                     continue;
                 }
@@ -229,7 +248,7 @@ public class Bush extends Network
               
         Tree output = new Tree(origin);
         
-        for(Node n : nodes)
+        for(Node n : network.nodes)
         {
             output.put(n, n.pred);
         }
@@ -237,13 +256,21 @@ public class Bush extends Network
         return output;
     }
     
+    public void equilibrate()
+    {
+        // needs to iterate
+        swapFlows();
+        improveBush();
+    }
+    
     public void swapFlows()
     {
+
         topologicalSort();
         
         Tree min = minPath();
         Tree max = maxUsedPath();
-
+        
 
         // start and end of common path segments
         Node m = null;
@@ -266,7 +293,7 @@ public class Bush extends Network
                     visited_min.add(l.getSource());
                 }
                 
-                System.out.println(visited_min);
+                //System.out.println(visited_min);
 
                 for(Link l : max_iter)
                 {
@@ -303,7 +330,7 @@ public class Bush extends Network
                     }
                 }
 
-                System.out.println(n+" "+m+" "+min_path+" "+max_path);
+                //System.out.println(n+" "+m+" "+min_path+" "+max_path);
                 
                 swapFlow(min_path, max_path);
                 n = m;
@@ -328,7 +355,7 @@ public class Bush extends Network
         
         for(Link l : max_path)
         {
-            max_moved = Math.min(l.bush_x, max_moved);
+            max_moved = Math.min(getFlow(l), max_moved);
         }
         
         
@@ -350,14 +377,12 @@ public class Bush extends Network
 
             for(Link l : max_path)
             {
-                l.x.addX(-y);
-                l.bush_x -= y;
+                addFlow(l, -y);
             }
             
             for(Link l : min_path)
             {
-                l.x.addX(y);
-                l.bush_x += y;
+                addFlow(l, y);
             }
 
 
@@ -373,12 +398,31 @@ public class Bush extends Network
     
     public void improveBush()
     {
+
+        shortestPath();
         
+        for(Link l : flow.keySet())
+        {
+            if(flow.get(l) == 0 && l.getSource().cost > l.getDest().cost)
+            {
+                flow.remove(l);
+            }
+        }
+        
+        for(Link l : network.links)
+        {
+            if(!contains(l) && l.getSource().cost < l.getDest().cost)
+            {
+                flow.put(l, 0.0);
+            }
+        }
+        
+        System.out.println(validateTopology());
     }
     
     public void loadDemand()
     {
-        dijkstras(origin);
+        network.dijkstras(origin);
         
         for(Node s : demand.keySet())
         {
@@ -386,7 +430,7 @@ public class Bush extends Network
             
             Node curr = null;
             
-            for(Node n : nodes)
+            for(Node n : network.nodes)
             {
                 if(n.getId() == s.getId())
                 {
@@ -399,9 +443,7 @@ public class Bush extends Network
             while(curr != origin)
             {
                 Link uv = curr.pred;
-                uv.x.addX(d);
-                uv.bush_x += d;
-                uv.inBush = true;
+                addFlow(uv, d);
                 curr = uv.getSource();
             }
         }
@@ -414,7 +456,7 @@ public class Bush extends Network
         
         
         
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -422,9 +464,9 @@ public class Bush extends Network
         
         origin.cost = 0;
         
-        for(Node u : nodes)
+        for(Node u : network.nodes)
         {
-            for(Link uv : u.getBushOutgoing())
+            for(Link uv : u.getBushOutgoing(this))
             {
                 Node v = uv.getDest();
                 double temp = uv.getTT() + u.cost;
@@ -437,6 +479,30 @@ public class Bush extends Network
                 
                 //System.out.println("testing "+uv+" "+u.cost+" "+temp+" "+nodes.contains(v)+" "+v.cost);
             }
+        }
+    }
+    
+    
+    public double getFlow(Link l)
+    {
+        if(flow.containsKey(l))
+        {
+            return flow.get(l);
+        }
+        return 0;
+    }
+    
+    public void addFlow(Link l, double x)
+    {
+        l.x.addX(x);
+        
+        if(flow.containsKey(l))
+        {
+            flow.put(l, flow.get(l)+x);
+        }
+        else
+        {
+            flow.put(l, x);
         }
     }
     

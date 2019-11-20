@@ -86,13 +86,13 @@ public class Node implements Comparable<Node>
     }
     
     
-    public Set<Link> getBushOutgoing()
+    public Set<Link> getBushOutgoing(Bush b)
     {
         Set<Link> output = new HashSet<>();
         
         for(Link l : outgoing)
         {
-            if(l.inBush)
+            if(b.contains(l))
             {
                 output.add(l);
             }
@@ -101,13 +101,13 @@ public class Node implements Comparable<Node>
         return output;
     }
     
-    public Set<Link> getBushIncoming()
+    public Set<Link> getBushIncoming(Bush b)
     {
         Set<Link> output = new HashSet<>();
         
         for(Link l : incoming)
         {
-            if(l.inBush)
+            if(b.contains(l))
             {
                 output.add(l);
             }
