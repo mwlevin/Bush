@@ -258,7 +258,10 @@ public class Bush
     
     public void equilibrate()
     {
-        System.out.println("Origin "+origin);
+        if(Params.printBushEquilibrate)
+        {
+            System.out.println("Origin "+origin);
+        }
         
         int swapIter = 0;
         
@@ -273,12 +276,20 @@ public class Bush
             do
             {
                 difference = swapFlows();
-                System.out.println("\t\tSwap: "+String.format("%.2f", difference));
+                
+                if(Params.printBushEquilibrate)
+                {
+                    System.out.println("\t\tSwap: "+String.format("%.2f", difference));
+                }
+                
                 swapIter ++;
             }
             while(difference > Params.bush_gap);
             
-            System.out.println("\t"+bushIter+"\t"+difference+"\t"+validateTopology());
+            if(Params.printBushEquilibrate)
+            {
+                System.out.println("\t"+bushIter+"\t"+difference+"\t"+validateTopology());
+            }
             
             improveBush();
         }

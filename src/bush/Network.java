@@ -441,9 +441,11 @@ public class Network
     }
     
     
+    private Map<Node, Bush> bushes;
+    
     public void algorithmB()
     {
-        Map<Node, Bush> bushes = new HashMap<>();
+        bushes = new HashMap<>();
         
         // initial feasible bush
         for(Node r : demand.getOrigins())
@@ -453,16 +455,54 @@ public class Network
 
         }
         
+        double gap = Integer.MAX_VALUE;
         
-        for(Node r : bushes.keySet())
+        System.out.println("Iter\tAEC");
+        
+        int iter = 0;
+        
+        do
         {
-            Bush bush = bushes.get(r);
-            bush.equilibrate();
+            iter++;
             
-            if(true) break;
+            for(Node r : bushes.keySet())
+            {
+                Bush bush = bushes.get(r);
+                bush.equilibrate();
+            }
+            
+            gap = calcAEC();
+            
+            System.out.println(iter+"\t"+String.format("%.3f", gap));
         }
+        while(gap > Params.epsilon);
 
     }
+    
+    public double calcAEC()
+    {
+        double tstt = 0.0;
+        
+        for(Link l : links)
+        {
+            tstt += l.x.getX() * l.getTT();
+        }
+        
+        double sptt = 0.0;
+        
+        for(Node r : demand.getOrigins())
+        {
+            dijkstras(r);
+            
+            for(Node s : demand.getDests(r))
+            {
+                sptt += s.cost * demand.getDemand(r, s);
+            }
+        }
+        
+        return (tstt - sptt) / demand.getTotal();
+    }
+    
     
     public Node findNode(int id)
     {
