@@ -52,7 +52,7 @@ public class Network
     {
         for(Node n : nodes)
         {
-            n.cost = Integer.MAX_VALUE;
+            n.cost = Params.INFTY;
             n.pred = null;
         }
         
@@ -65,7 +65,7 @@ public class Network
         while(!Q.isEmpty())
         {
             Node u = null;
-            double best = Integer.MAX_VALUE;
+            double best = Params.INFTY;
             
             for(Node n : Q)
             {
@@ -437,15 +437,11 @@ public class Network
         return links.length;
     }
     
-    public void frankWolfe()
-    {
-        frankWolfe(100000, Params.epsilon);
-    }
-    
+
     public void frankWolfe(int max_iter, double min_gap)
     {
         
-        double gap = Integer.MAX_VALUE;
+        double gap = Params.INFTY;
         int iter = 0;
         
         System.out.println("Iter\tStep size\tAEC");
@@ -581,7 +577,7 @@ public class Network
 
         }
         
-        double gap = Integer.MAX_VALUE;
+        double gap = Params.INFTY;
         
         System.out.println("Iter\tAEC");
         
@@ -660,6 +656,11 @@ public class Network
     
     public Link findLink(Node i, Node j)
     {
+        if(i == null || j == null)
+        {
+            return null;
+        }
+        
         for(Link l : i.getOutgoing())
         {
             if(l.getDest() == j)
@@ -668,6 +669,11 @@ public class Network
             }
         }
         return null;
+    }
+    
+    public Link findLink(int idi, int idj)
+    {
+        return findLink(findNode(idi), findNode(idj));
     }
     
  

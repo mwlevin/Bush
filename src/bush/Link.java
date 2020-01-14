@@ -84,7 +84,16 @@ public class Link
     
     public double getDeriv_TT(double x)
     {
+        if(beta == 0)
+        {
+            return 0;
+        }
         return fftime * alpha * beta / capacity * Math.pow(x / capacity, beta - 1);
+    }
+    
+    public double getReducedCost()
+    {
+        return dest.cost - (source.cost + getTT());
     }
     
     public double getDeriv_TT()
@@ -119,7 +128,7 @@ public class Link
     }
     
     public double getTT(double x)
-    {
+    {   
         return fftime * (1 + alpha * Math.pow(x / capacity, beta));
     }
 }

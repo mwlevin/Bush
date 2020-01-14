@@ -13,8 +13,10 @@ public class Params
 {
     public static double bush_gap = 0.1;
     
-    public static double epsilon = 0.1;
+    //public static double epsilon = 0.1;
     
+    public static final double INFTY = 1.0e7;
     
     public static final boolean printBushEquilibrate = false;
+    public static final boolean printReducedCosts = false;
 }

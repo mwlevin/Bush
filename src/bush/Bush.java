@@ -102,6 +102,20 @@ public class Bush
             }
         }
 
+        // check for nodes that were not completed
+        for(Node n : network.nodes)
+        {
+            if(n.in_degree < n.getBushIncoming(this).size() && !n.visited)
+            {
+                System.out.println(origin+"\t"+n+"\t"+n.getBushIncoming(this)+"\t"+n.getBushOutgoing(this)+"\t"+n.top_order);
+                
+                for(Link l : n.getBushOutgoing(this))
+                {
+                    System.out.println("\t"+l.getDest()+"\t"+l.getDest().getBushIncoming(this)+"\t"+l.getDest().top_order);
+                }
+                throw new RuntimeException("Not DAG origin "+origin);
+            }
+        }
     }
     
     /*
@@ -204,6 +218,27 @@ public class Bush
         return false;
     }
     
+    public boolean checkReducedCosts()
+    {
+        minPath();
+        
+        boolean output = true;
+        for(Link l : network.links)
+        {
+            if(flow[l.getIdx()] > 0 && l.getReducedCost() <- Params.bush_gap)
+            {
+                if(Params.printReducedCosts)
+                {
+                    System.out.println("Negative reduced cost origin "+origin);
+                    System.out.println(l+"\t"+flow[l.getIdx()]+"\t"+l.getSource().cost+"\t"+l.getTT()+"\t"+l.getDest().cost + "\t"+
+                            (l.getDest().cost - (l.getSource().cost + l.getTT())));
+                }
+                output = false;
+            }
+        }
+        return output;
+    }
+    
     public boolean validateTopology()
     {
         for(int idx = 0; idx < flow.length; idx++)
@@ -227,7 +262,7 @@ public class Bush
     {
         for(Node u : network.nodes)
         {
-            u.cost = Integer.MAX_VALUE;
+            u.cost = Params.INFTY;
             u.pred = null;
         }
         
@@ -269,7 +304,7 @@ public class Bush
     {
         for(Node u : network.nodes)
         {
-            u.cost = Integer.MAX_VALUE;
+            u.cost = Params.INFTY;
             u.pred = null;
         }
         
@@ -278,10 +313,12 @@ public class Bush
         
         for(Node u : sorted)
         {
+            
             for(Link uv : u.getBushOutgoing(this))
             {
                 
                 Node v = uv.getDest();
+                
                 double temp = uv.getTT() + u.cost;
                 
                 if(temp < v.cost)
@@ -293,13 +330,7 @@ public class Bush
 
         }
 
-        for(Node u : sorted)
-        {
-                        
-            //System.out.println(u+"\t"+u.cost+"\t"+u.pred+"\t"+u.top_order);
-        }
-        
-        
+
         Tree output = new Tree(origin);
         
         for(Node n : sorted)
@@ -314,7 +345,7 @@ public class Bush
     {
         for(Node u : network.nodes)
         {
-            u.cost = Integer.MIN_VALUE;
+            u.cost = -Params.INFTY;
             u.pred = null;
         }
         
@@ -354,6 +385,8 @@ public class Bush
     
     public void equilibrate(double bush_gap)
     {
+        topologicalSort();
+        
         if(Params.printBushEquilibrate)
         {
             System.out.println("Origin "+origin);
@@ -361,7 +394,7 @@ public class Bush
         
         int swapIter = 0;
         
-        double difference = Integer.MAX_VALUE;
+        double difference = Params.INFTY;
         
         for(int bushIter = 1; !(bushIter > 2 && swapIter < 2); bushIter++)
         {
@@ -383,7 +416,29 @@ public class Bush
                 
                 swapIter ++;
             }
-            while(difference > bush_gap);
+            while(!checkReducedCosts());
+            //while(difference > bush_gap);
+            
+            if(!checkReducedCosts())
+            {
+                Tree min = minPath();
+                Tree max = maxUsedPath();
+                
+                int id = 11;
+                Path minPath = min.getPath(network.findNode(id));
+                System.out.println(minPath+"\t"+minPath.getTT());
+                Path maxPath = max.getPath(network.findNode(id));
+                 System.out.println(maxPath +"\t"+maxPath.getTT()+"\t"+getMaxFlow(maxPath));
+                
+                System.out.println(swapFlow(minPath, maxPath));
+                
+                System.out.println(minPath+"\t"+minPath.getTT());
+                System.out.println(maxPath +"\t"+maxPath.getTT()+"\t"+getMaxFlow(maxPath));
+                
+                checkReducedCosts();
+                
+                System.exit(0);
+            }
             
             if(Params.printBushEquilibrate)
             {
@@ -394,14 +449,21 @@ public class Bush
         }
     }
     
+    public double getMaxFlow(Path path)
+    {
+        double max_moved = Params.INFTY;
+        for(Link l : path)
+        {
+            max_moved = Math.min(flow[l.getIdx()], max_moved);
+        }
+        return max_moved;
+    }
+    
     public double swapFlows()
     {
 
-        topologicalSort();
-        
-        
-        Tree min = minPath();
         Tree max = maxUsedPath();
+        Tree min = minPath();
         
 
         // start and end of common path segments
@@ -414,14 +476,21 @@ public class Bush
         {
             
             Node s = network.nodes[ids];
-            n = s;
+            
             
             if(origin.getDemand((Dest)s) == 0)
             {
                 continue;
             }
             
+            Path min_path = min.getPath(s);
+            Path max_path = max.getPath(s);
             
+            max_diff = Math.max(max_diff, swapFlow(min_path, max_path));
+            
+            /*
+            
+            n = s;
             while(n != origin)
             {
                 
@@ -448,8 +517,27 @@ public class Bush
                 
                 if(m==null)
                 {
-                    System.out.println("n="+n+" "+n.getBushIncoming(this));
+                    System.out.println("origin="+origin);
+                    
+                    
+                    System.out.println("n="+n+" "+n.getBushIncoming(this)+"\t"+n.top_order+"\t"+n.cost);
+                    
+                    
+                    int id = 164;
+                    Node node = network.findNode(id);
+                    System.out.println(node+"\t"+node.getBushIncoming(this)+"\t"+node.getBushOutgoing(this)+"\t"+
+                            node.top_order+"\t"+node.cost+"\t"+sorted.contains(node)+"\t"+node.in_degree);
+                    id = 162;
+                    node = network.findNode(id);
+                    System.out.println(node+"\t"+node.getBushIncoming(this)+"\t"+node.getBushOutgoing(this)+"\t"+
+                            node.top_order+"\t"+node.cost+"\t"+sorted.contains(node)+"\t"+node.in_degree);
                     System.out.println(visited_min);
+                    
+                    Link link = network.findLink(162, 164);
+                    System.out.println(link+"\t"+link.getTT()+"\t"+flow[link.getIdx()]);
+                    
+                    link = network.findLink(164, 162);
+                    System.out.println(link+"\t"+link.getTT()+"\t"+flow[link.getIdx()]);
                     
                     max_iter = max.iterator(n);
                     
@@ -495,6 +583,7 @@ public class Bush
                 n = m;
                 
             }
+            */
         }
         
         return max_diff;
@@ -510,23 +599,36 @@ public class Bush
             return 0.0;
         }
         
-        double max_moved = Integer.MAX_VALUE;
+        double max_moved = getMaxFlow(max_path);
         
         double stepsize = 1;
         
-        for(Link l : max_path)
-        {
-            max_moved = Math.min(flow[l.getIdx()], max_moved);
-        }
+        
         
         //System.out.println(max_path);
         
         double difference = max_path.getTT() - min_path.getTT();
         
-
+        /*
+        if(origin.getId() == 1)
+        {
+            System.out.println(origin+"\t"+min_path.get(min_path.size()-1).getDest()+"\t"+max_moved);
+            System.out.println("\t"+min_path.getTT()+"\t"+difference);
+            for(Link l : min_path)
+            {
+                System.out.println("\t\t"+l+"\t"+l.getReducedCost());
+            }
+            System.out.println("\t"+max_path.getTT()+"\t"+difference);
+            for(Link l : max_path)
+            {
+                System.out.println("\t\t"+l+"\t"+l.getReducedCost());
+            }
+        }
+        */
 
         while(max_moved >= Params.bush_gap && difference >= Params.bush_gap)
         {
+ 
             double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
             
 
@@ -559,13 +661,14 @@ public class Bush
     
     public boolean checkCost(Link l)
     {
-        return l.getSource().cost + l.getTT() <= l.getDest().cost;
+        return l.getReducedCost() >= 0;
+        
     }
     
     public void improveBush()
     {
 
-        shortestPath();
+        minPath();
         
         List<Link> remove = new ArrayList<>();
         
@@ -594,6 +697,8 @@ public class Bush
                 contains[idx] = true;
             }
         }
+        
+        topologicalSort();
     }
     
     public void loadDemand()
@@ -629,40 +734,12 @@ public class Bush
         }
     }
     
-    // acyclic shortest path
-    public void shortestPath()
-    {
-        topologicalSort();
-        
-        
-        
-        for(Node u : network.nodes)
-        {
-            u.cost = Integer.MAX_VALUE;
-            u.pred = null;
-        }
-        
-        origin.cost = 0;
-        
-        for(Node u : sorted)
-        {
-            for(Link uv : u.getBushOutgoing(this))
-            {
-                Node v = uv.getDest();
-                double temp = uv.getTT() + u.cost;
-                
-                if(temp < v.cost)
-                {
-                    v.cost = temp;
-                    v.pred = uv;
-                }
-            }
-        }
-    }
-
-    
     public void addFlow(Link l, double x)
     {
+        if((""+x).equals("NaN"))
+        {
+            System.out.println("check");
+        }
         l.x.addX(x);
         flow[l.getIdx()] += x;
         contains[l.getIdx()] = true;

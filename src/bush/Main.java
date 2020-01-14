@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException
     {
         long time = System.nanoTime();
-        Network test = new Network("Anaheim");
+        Network test = new Network("SiouxFalls");
         
         //test.frankWolfe(10, 0);
         test.algorithmB(10, 0);

@@ -8,7 +8,7 @@ package bush;
 import java.util.ArrayList;
 
 /**
- *
+ * 
  * @author micha
  */
 public class Path extends ArrayList<Link>
@@ -60,6 +60,10 @@ public class Path extends ArrayList<Link>
     
     public String toString()
     {
+        if(size() == 0)
+        {
+            return "[]";
+        }
         String output = "[";
         if(!backwards)
         {

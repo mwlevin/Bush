@@ -10,7 +10,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * A tree is a map of nodes to their predecessor link
+ * A tree is a map of nodes to their predecessor link.
+ * RECODE THIS USING ARRAY
  * The root has no predecessor. 
  * The root node is implicit.
  * @author micha
