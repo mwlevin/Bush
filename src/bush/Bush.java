@@ -345,10 +345,10 @@ public class Bush
         for(int ids = network.getFirstDest(); ids <= network.getLastDest(); ids++)
         {
             
-            Zone s = (Zone)network.nodes[ids];
+            Node s = network.nodes[ids];
             n = s;
             
-            if(origin.getDemand(s) == 0)
+            if(origin.getDemand((Dest)s) == 0)
             {
                 continue;
             }
@@ -532,12 +532,13 @@ public class Bush
         
         for(int ids = network.getFirstDest(); ids <= network.getLastDest(); ids++)
         {
-            Zone s = (Zone)network.nodes[ids];
+            Node s = network.nodes[ids];
             
-            double d = origin.getDemand(s);
+            double d = origin.getDemand((Dest)s);
             
-            Node curr = null;
+            Node curr = s;
             
+            /*
             for(Node n : network.nodes)
             {
                 if(n.getId() == s.getId())
@@ -546,6 +547,7 @@ public class Bush
                     break;
                 }
             }
+            */
             
             
             while(curr != origin)
