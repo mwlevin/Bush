@@ -248,11 +248,6 @@ public class Network
             double a = filein.nextDouble();
             int b = (int)Math.round(filein.nextDouble());
             filein.nextLine();
-            
-            if(s < firstThruNode)
-            {
-                s = -s;
-            }
 
             links[n] = new Link(keynodes.get(r), keynodes.get(s), tf, Q, a, b, len);
         }
