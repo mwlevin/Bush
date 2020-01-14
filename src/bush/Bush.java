@@ -290,7 +290,7 @@ public class Bush
             }
         }
         
-        Tree output = new Tree(origin);
+        Tree output = new Tree(origin, network);
         
         for(Node n : sorted)
         {
@@ -331,7 +331,7 @@ public class Bush
         }
 
 
-        Tree output = new Tree(origin);
+        Tree output = new Tree(origin, network);
         
         for(Node n : sorted)
         {
@@ -373,7 +373,7 @@ public class Bush
             }
         }
               
-        Tree output = new Tree(origin);
+        Tree output = new Tree(origin, network);
         
         for(Node n : sorted)
         {

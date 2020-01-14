@@ -11,18 +11,19 @@ import java.util.Map;
 
 /**
  * A tree is a map of nodes to their predecessor link.
- * RECODE THIS USING ARRAY
  * The root has no predecessor. 
  * The root node is implicit.
  * @author micha
  */
-public class Tree extends HashMap<Node, Link>
+public class Tree
 {
     private Node origin;
+    private Link[] map;
     
-    public Tree(Node origin)
+    public Tree(Node origin, Network network)
     {
         this.origin = origin;
+        map = new Link[network.nodes.length];
     }
     
     public Node getOrigin()
@@ -30,16 +31,21 @@ public class Tree extends HashMap<Node, Link>
         return origin;
     }
     
-    public Iterable<Link> iterator(Node s)
+    public void put(Node node, Link link)
     {
-        return new Iterable<Link>()
-        {
-            public Iterator<Link> iterator()
-            {
-                return new PathIterator(s);
-            }
-        };
+        map[node.getIdx()] = link;
     }
+    
+    public boolean containsKey(Node node)
+    {
+        return map[node.getIdx()] != null;
+    }
+    
+    public Link get(Node node)
+    {
+        return map[node.getIdx()];
+    }
+
     
     /**
      * Iterates over the path (links) from Node r to Node s, in backwards order

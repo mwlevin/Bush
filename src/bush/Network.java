@@ -99,7 +99,7 @@ public class Network
     {
         dijkstras(r);
         
-        Tree output = new Tree(r);
+        Tree output = new Tree(r, this);
         
         for(Node n : nodes)
         {
@@ -487,7 +487,7 @@ public class Network
                 
                 sptt += d * s.cost;
                 
-                for(Link l : tree.iterator(s))
+                for(Link l : tree.trace(s))
                 {
                     l.x.x_star += d;
                 }
