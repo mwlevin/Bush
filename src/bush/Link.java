@@ -27,7 +27,7 @@ public class Link
     
     public Link(Node source, Node dest, double fftime, double capacity, double alpha, double beta, double length)
     {
-        this(Integer.parseInt(source.getId()+""+dest.getId()), source, dest, fftime, capacity, alpha, beta, length);
+        this(Integer.parseInt(source.getId()+""+((int)Math.abs(dest.getId()))), source, dest, fftime, capacity, alpha, beta, length);
     }
     
     public Link(int id, Node source, Node dest, double fftime, double capacity, double alpha, double beta, double length)

@@ -249,7 +249,7 @@ public class Network
         
         for(int i = 0; i < numNewDests; i++)
         {
-            int id = - (i + numOrigins + 1);
+            int id = - (i + 1);
             Node node = new DestNode(id, dest_idx++);
             nodes[i + numOrigins] = node;
             keynodes.put(id, node);
@@ -257,7 +257,7 @@ public class Network
         
         for(int i = 0; i < numNodes - numOrigins - numNewDests; i++)
         {
-            int id = i + numOrigins + numNewDests + 1;
+            int id = i + numOrigins + 1;
             
             Node node = new Node(id);
             nodes[i + numOrigins + numNewDests] = node;
@@ -266,7 +266,7 @@ public class Network
         }
         
         while(filein.nextLine().trim().length() == 0);
-        
+
         
         links = new Link[numLinks];
         
@@ -293,6 +293,7 @@ public class Network
             {
                 j = keynodes.get(idj);
             }
+            
 
             links[n] = new Link(i, j, tf, Q, a, b, len);
         }
@@ -476,9 +477,9 @@ public class Network
 
             for(int ids = getFirstDest(); ids <= getLastDest(); ids++)
             {
-                Zone s = (Zone)nodes[ids];
+                Node s = nodes[ids];
                 
-                double d = r.getDemand(s);
+                double d = r.getDemand((Dest)s);
                 
                 sptt += d * s.cost;
                 
@@ -617,8 +618,8 @@ public class Network
             
             for(int ids = getFirstDest(); ids <= getLastDest(); ids++)
             {
-                Zone s = (Zone)nodes[ids];
-                sptt += r.getDemand(s) * s.cost;
+                Node s = nodes[ids];
+                sptt += r.getDemand((Dest)s) * s.cost;
             }
         }
         
