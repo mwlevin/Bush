@@ -18,10 +18,10 @@ public class Main {
      */
     public static void main(String[] args) throws IOException
     {
-        Network test = new Network("SiouxFalls");
+        Network test = new Network("Anaheim");
         
-        //test.frankWolfe(100, 0.1);
-        test.algorithmB(100);
+        //test.frankWolfe(10, 0);
+        test.algorithmB(10, 0);
         
     }
     

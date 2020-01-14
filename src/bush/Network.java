@@ -278,7 +278,7 @@ public class Network
             double len = filein.nextDouble();
             double tf = filein.nextDouble();
             double a = filein.nextDouble();
-            int b = (int)Math.round(filein.nextDouble());
+            double b = filein.nextDouble();
             filein.nextLine();
             
             
@@ -294,8 +294,18 @@ public class Network
                 j = keynodes.get(idj);
             }
             
-
-            links[n] = new Link(i, j, tf, Q, a, b, len);
+            Link l;
+            
+            if(b == 4)
+            {
+                l = new BPRLink4(i, j, tf, Q, a, b, len);
+            }
+            else
+            {
+                l = new Link(i, j, tf, Q, a, b, len);
+            }
+            
+            links[n] = l;
         }
         
         
@@ -563,7 +573,7 @@ public class Network
     }
     
 
-    public void algorithmB(int max_iter)
+    public void algorithmB(int max_iter, double min_gap)
     {
         long time = System.nanoTime();
 
@@ -595,7 +605,7 @@ public class Network
             
             System.out.println(iter+"\t"+String.format("%.3f", gap));
         }
-        while(gap > Params.epsilon && iter <= max_iter);
+        while(gap > min_gap && iter < max_iter);
 
         System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+" s");
     }

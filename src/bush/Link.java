@@ -56,6 +56,17 @@ public class Link
         return id;
     }
     
+    
+    public double getAlpha()
+    {
+        return alpha;
+    }
+    
+    public double getBeta()
+    {
+        return beta;
+    }
+    
     public double getFFTime()
     {
         return fftime;
