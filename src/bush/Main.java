@@ -18,10 +18,14 @@ public class Main {
      */
     public static void main(String[] args) throws IOException
     {
+        long time = System.nanoTime();
         Network test = new Network("Anaheim");
         
         //test.frankWolfe(10, 0);
         test.algorithmB(10, 0);
+        
+        
+        System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9));
         
     }
     

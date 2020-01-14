@@ -444,7 +444,6 @@ public class Network
     
     public void frankWolfe(int max_iter, double min_gap)
     {
-        long time = System.nanoTime();
         
         double gap = Integer.MAX_VALUE;
         int iter = 0;
@@ -464,8 +463,7 @@ public class Network
             System.out.println(iter+"\t"+String.format("%.4f", lambda)+"\t"+String.format("%.4f", gap));
         }
         while((gap > min_gap || iter == 1) && iter < max_iter);
-        
-        System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+" s");
+
     }
     
     public double calcSearchDirection()
@@ -575,8 +573,6 @@ public class Network
 
     public void algorithmB(int max_iter, double min_gap)
     {
-        long time = System.nanoTime();
-
         // initial feasible bush
         for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
         {
@@ -607,8 +603,8 @@ public class Network
         }
         while(gap > min_gap && iter < max_iter);
 
-        System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+" s");
     }
+
     
     public double calcAEC()
     {
@@ -644,6 +640,31 @@ public class Network
             if(n.getId() == id)
             {
                 return n;
+            }
+        }
+        return null;
+    }
+    
+    public Link findLink(int id)
+    {
+        for(Link l : links)
+        {
+            if(l.getId() == id)
+            {
+                return l;
+            }
+        }
+        
+        return null;
+    }
+    
+    public Link findLink(Node i, Node j)
+    {
+        for(Link l : i.getOutgoing())
+        {
+            if(l.getDest() == j)
+            {
+                return l;
             }
         }
         return null;

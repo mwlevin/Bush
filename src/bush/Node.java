@@ -26,6 +26,8 @@ public class Node implements Comparable<Node>
 
     
     public int top_order;
+    public boolean visited;
+    public int in_degree;
     
     public double cost;
     public Link pred;

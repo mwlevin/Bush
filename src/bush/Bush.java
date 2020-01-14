@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -29,7 +30,7 @@ public class Bush
     
     private Network network;
     
-    private Node[] sorted;
+    private ArrayList<Node> sorted;
     
     public Bush(Zone origin, Network network)
     {
@@ -39,6 +40,7 @@ public class Bush
         this.origin = origin;
         
         
+        sorted = new ArrayList<>();
         flow = new double[network.getLinks().length];
         contains = new boolean[network.getLinks().length];
         
@@ -56,6 +58,53 @@ public class Bush
         return contains[l.getIdx()];
     }
     
+    
+    public void topologicalSort()
+    {
+        for(Node n : network.nodes)
+        {
+            n.in_degree = n.getBushIncoming(this).size();
+            n.visited = false;
+            n.top_order = -1;
+        }
+        
+        Queue<Node> queue = new LinkedList<Node>();
+        queue.add(origin);
+        origin.visited = true;
+        
+        
+        sorted.clear();
+        
+        int idx = 0;
+        
+        while(!queue.isEmpty())
+        {
+            Node vertex = queue.remove();
+            sorted.add(vertex);
+            vertex.top_order = idx;
+            idx++;
+            
+            for(Link ij : vertex.getBushOutgoing(this))
+            {
+                Node j = ij.getDest();
+                
+                
+                if(!j.visited)
+                {
+                    j.in_degree--;
+                    
+                    if(j.in_degree == 0)
+                    {
+                        queue.add(j);
+                        j.visited = true;
+                    }
+                }
+            }
+        }
+
+    }
+    
+    /*
     public void topologicalSort()
     {
         for(Node n : network.nodes)
@@ -93,46 +142,6 @@ public class Bush
 
     }
     
-    
-    
-    public boolean testTopologicalSort()
-    {
-        topologicalSort();
-        
-        for(int idx = 0; idx < flow.length; idx++)
-        {
-            if(!contains[idx])
-            {
-                continue;
-            }
-            Link l = network.links[idx];
-            
-            if(l.getSource().top_order > l.getDest().top_order)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    public boolean validateTopology()
-    {
-        for(int idx = 0; idx < flow.length; idx++)
-        {
-            if(!contains[idx])
-            {
-                continue;
-            }
-            Link l = network.links[idx];
-            
-            if(l.getSource().top_order > l.getDest().top_order)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     int order = 0;
     
     public int visit(Node u)
@@ -161,6 +170,58 @@ public class Bush
         
         return output;
     }
+    */
+    
+    public boolean testTopologicalSort()
+    {
+        topologicalSort();
+        
+        for(int idx = 0; idx < flow.length; idx++)
+        {
+            if(!contains[idx])
+            {
+                continue;
+            }
+            Link l = network.links[idx];
+            
+            if(l.getSource().top_order > l.getDest().top_order)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public boolean containsNode(List<Node> nodes, int id)
+    {
+        for(Node n : nodes)
+        {
+            if(n.getId() == id)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public boolean validateTopology()
+    {
+        for(int idx = 0; idx < flow.length; idx++)
+        {
+            if(!contains[idx])
+            {
+                continue;
+            }
+            Link l = network.links[idx];
+            
+            if(l.getSource().top_order > l.getDest().top_order)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     
     public Tree minUsedPath()
     {
@@ -206,7 +267,7 @@ public class Bush
     
     public Tree minPath()
     {
-        for(Node u : sorted)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -214,7 +275,6 @@ public class Bush
         
         origin.cost = 0;
         
-        origin.cost = 0;
         
         for(Node u : sorted)
         {
@@ -230,7 +290,15 @@ public class Bush
                     v.pred = uv;
                 }
             }
+
         }
+
+        for(Node u : sorted)
+        {
+                        
+            //System.out.println(u+"\t"+u.cost+"\t"+u.pred+"\t"+u.top_order);
+        }
+        
         
         Tree output = new Tree(origin);
         
@@ -244,7 +312,7 @@ public class Bush
     
     public Tree maxUsedPath()
     {
-        for(Node u : sorted)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MIN_VALUE;
             u.pred = null;
@@ -378,6 +446,21 @@ public class Bush
                     }
                 }
                 
+                if(m==null)
+                {
+                    System.out.println("n="+n+" "+n.getBushIncoming(this));
+                    System.out.println(visited_min);
+                    
+                    max_iter = max.iterator(n);
+                    
+                    for(Link l : max_iter)
+                    {
+                        System.out.print(l+" ");
+                    }
+                    System.out.println();
+                    
+                    throw new RuntimeException("m is null");
+                }
                 
 
                 min_iter = min.iterator(n);
@@ -407,12 +490,10 @@ public class Bush
                 //System.out.println(n+" "+m+" "+min_path+" "+max_path);
                 
                 max_diff = Math.max(max_diff, swapFlow(min_path, max_path));
+                
+                
                 n = m;
                 
-                if(m==null)
-                {
-                    throw new RuntimeException("m is null");
-                }
             }
         }
         
@@ -484,17 +565,6 @@ public class Bush
     public void improveBush()
     {
 
-        
-        //Tree maxPath = maxUsedPath();
-        //Tree minPath = minPath();
-        
-        
-        //System.out.println(minPath.getPath(network.findNode(21)));
-        //System.out.println(minPath.getPath(network.findNode(22)));
-        
-        
-        
-        
         shortestPath();
         
         List<Link> remove = new ArrayList<>();
@@ -566,7 +636,7 @@ public class Bush
         
         
         
-        for(Node u : sorted)
+        for(Node u : network.nodes)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -586,8 +656,6 @@ public class Bush
                     v.cost = temp;
                     v.pred = uv;
                 }
-                
-                //System.out.println("testing "+uv+" "+u.cost+" "+temp+" "+nodes.contains(v)+" "+v.cost);
             }
         }
     }
