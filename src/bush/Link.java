@@ -11,6 +11,11 @@ package bush;
  */
 public class Link 
 {
+    private static int next_idx = 0;
+    
+    
+    private int idx;
+    
     private int id;
     
 
@@ -27,6 +32,7 @@ public class Link
     
     public Link(int id, Node source, Node dest, double fftime, double capacity, double alpha, double beta, double length)
     {
+        idx = next_idx++;
         this.id = id;
         this.source = source;
         this.dest = dest;
@@ -37,13 +43,13 @@ public class Link
         this.length = length;
         
         x = new Flow();
-        
-        source.addLink(this);
-        dest.addLink(this);
-
     }
     
 
+    public int getIdx()
+    {
+        return idx;
+    }
     
     public int getId()
     {

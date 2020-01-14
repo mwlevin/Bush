@@ -5,7 +5,9 @@
  */
 package bush;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,9 +16,14 @@ import java.util.Set;
  */
 public class Node implements Comparable<Node>
 {
+    private static int next_idx = 0;
+    
+    
+    private int idx;
+    
     private int id;
-    private String name;
-    public Node cloned;
+  
+
     
     public int top_order;
     
@@ -26,20 +33,17 @@ public class Node implements Comparable<Node>
     
     public boolean temp_mark;
     
-    private Set<Link> incoming, outgoing;
+    private Link[] incoming, outgoing;
     
     public Node(int id)
     {
-        this(id, ""+id);
+        idx = next_idx++;
+        this.id = id;
     }
     
-
-    public Node(int id, String name)
+    public int getIdx()
     {
-        this.id = id;
-        this.name = name;
-        incoming = new HashSet<>();
-        outgoing = new HashSet<>();
+        return idx;
     }
     
     public int compareTo(Node rhs)
@@ -58,37 +62,35 @@ public class Node implements Comparable<Node>
         return id;
     }
     
-    public void addLink(Link l)
+    public void setIncoming(Link[] inc)
     {
-        if(l.getSource() == this)
-        {
-            outgoing.add(l);
-        }
-        else if(l.getDest() == this)
-        {
-            incoming.add(l);
-        }
+        incoming = inc;
+    }
+    
+    public void setOutgoing(Link[] out)
+    {
+        outgoing = out;
     }
     
     public String toString()
     {
-        return ""+name;
+        return ""+id;
     }
     
-    public Set<Link> getIncoming()
+    public Link[] getIncoming()
     {
         return incoming;
     }
     
-    public Set<Link> getOutgoing()
+    public Link[] getOutgoing()
     {
         return outgoing;
     }
     
     
-    public Set<Link> getBushOutgoing(Bush b)
+    public List<Link> getBushOutgoing(Bush b)
     {
-        Set<Link> output = new HashSet<>();
+        List<Link> output = new ArrayList<>();
         
         for(Link l : outgoing)
         {
@@ -101,9 +103,9 @@ public class Node implements Comparable<Node>
         return output;
     }
     
-    public Set<Link> getBushIncoming(Bush b)
+    public List<Link> getBushIncoming(Bush b)
     {
-        Set<Link> output = new HashSet<>();
+        List<Link> output = new ArrayList<>();
         
         for(Link l : incoming)
         {

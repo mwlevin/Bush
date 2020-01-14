@@ -22,45 +22,29 @@ import java.util.Set;
  */
 public class Network 
 {
-    protected List<Node> nodes;
-    protected Set<Link> links;
+    protected Node[] nodes;
+    protected Link[] links;
     
-    private Demand demand;
+    protected int numZones;
     
-    public Network(Network network)
-    {
-        nodes = new ArrayList<>();
-        links = new HashSet<>();
-        demand = network.demand;
-    }
+    private double total_demand;
+
     public Network(String name) throws IOException
     {
-        nodes = new ArrayList<>();
-        links = new HashSet<>();
-        demand = new Demand();
         readNetwork(name);
     }
-    public Network(List<Node> nodes, Set<Link> links, Demand demand)
-    {
-        this.nodes = nodes;
-        this.links = links;
-        this.demand = demand;
-    }
+
     
-    public List<Node> getNodes()
+    public Node[] getNodes()
     {
         return nodes;
     }
     
-    public Set<Link> getLinks()
+    public Link[] getLinks()
     {
         return links;
     }
     
-    public Demand getDemand()
-    {
-        return demand;
-    }
     
     
     public void dijkstras(Node r)
@@ -197,7 +181,7 @@ public class Network
         int numLinks = 0;
         int firstThruNode = 0;
         int numNodes = 0;
-        int numZones = 0;
+
         
         // metadata
         while(true)
@@ -229,15 +213,30 @@ public class Network
             }
         }
         
-        for(int i = 1; i <= numNodes; i++)
+        nodes = new Node[numNodes];
+        
+        for(int i = 0; i < numNodes; i++)
         {
-            Node node = new Node(i);
-            nodes.add(node);
-            keynodes.put(i, node);
+            int id = i+1;
+            
+            Node node;
+            if(i < numZones)
+            {
+                node = new Zone(id, numZones);
+            }
+            else
+            {
+                node = new Node(id);
+            }
+            nodes[i] = node;
+            keynodes.put(id, node);
             
         }
         
         while(filein.nextLine().trim().length() == 0);
+        
+        
+        links = new Link[numLinks];
         
         for(int n = 0; n < numLinks; n++)
         {
@@ -254,12 +253,36 @@ public class Network
             {
                 s = -s;
             }
-            links.add(new Link(keynodes.get(r), keynodes.get(s), tf, Q, a, b, len));
+
+            links[n] = new Link(keynodes.get(r), keynodes.get(s), tf, Q, a, b, len);
         }
         
         
         filein.close();
         
+        
+        
+        for(Node n : nodes)
+        {
+            List<Link> inc = new ArrayList<>();
+            List<Link> out = new ArrayList<>();
+            
+            
+            for(Link l : links)
+            {
+                if(l.getSource() == n)
+                {
+                    out.add(l);
+                }
+                else if(l.getDest() == n)
+                {
+                    inc.add(l);
+                }
+            }
+            
+            n.setIncoming(inc.toArray(new Link[0]));
+            n.setOutgoing(out.toArray(new Link[0]));
+        }
         filein = new Scanner(trips);
         
         double mu = 0;
@@ -278,9 +301,8 @@ public class Network
             }
         }
         
-        demand = new Demand();
         
-        Node r = null;
+        Zone r = null;
         
         while(filein.hasNext())
         {
@@ -288,11 +310,11 @@ public class Network
             
             if(next.equalsIgnoreCase("Origin"))
             {
-                r = keynodes.get(filein.nextInt());
+                r = (Zone)keynodes.get(filein.nextInt());
             }
             else
             {
-                Node s = keynodes.get(Integer.parseInt(next));
+                Zone s = (Zone)keynodes.get(Integer.parseInt(next));
                 
 
                 filein.next(); 
@@ -308,18 +330,32 @@ public class Network
                 
                 double p = Double.parseDouble(temp);
                 
-                if(p > 0)
-                {
-                    demand.addDemand(r, s, p);
-                }
+                r.setDemand(s, p);
+                total_demand += p;
             }
         }
         filein.close();
         
-        System.out.println("Demand: "+Math.round(demand.getTotal()));
+        System.out.println("Demand: "+Math.round(total_demand));
 
     }    
 
+    
+    public int getNumZones()
+    {
+        return numZones;
+    }
+    
+    public int getNumNodes()
+    {
+        return nodes.length;
+    }
+    
+    public int getNumLinks()
+    {
+        return links.length;
+    }
+    
     public void frankWolfe()
     {
         frankWolfe(100000, Params.epsilon);
@@ -362,13 +398,17 @@ public class Network
             l.x.x_star = 0;
         }
         
-        for(Node r : demand.getOrigins())
+        for(int idr = 0; idr < numZones; idr++)
         {
+            Zone r = (Zone)nodes[idr];
+            
             Tree tree = getSPTree(r);
 
-            for(Node s : demand.getDests(r))
+            for(int ids = 0; ids < numZones; ids++)
             {
-                double d = demand.getDemand(r, s);
+                Zone s = (Zone)nodes[ids];
+                
+                double d = r.getDemand(s);
                 
                 sptt += d * s.cost;
                 
@@ -379,7 +419,7 @@ public class Network
             }
         }
         
-        return (tstt - sptt) / demand.getTotal();
+        return (tstt - sptt) / total_demand;
     }
     
     public void update(double lambda)
@@ -451,20 +491,16 @@ public class Network
         return output;
     }
     
-    
-    private Map<Node, Bush> bushes;
-    
-    public void algorithmB()
+
+    public void algorithmB(int max_iter)
     {
         long time = System.nanoTime();
-        
-        bushes = new HashMap<>();
-        
+
         // initial feasible bush
-        for(Node r : demand.getOrigins())
+        for(int idr = 0; idr < numZones; idr++)
         {
-            Bush bush;
-            bushes.put(r, bush = new Bush(r, this));
+            Zone r = (Zone)nodes[idr];
+            r.bush = new Bush(r, this);
 
         }
         
@@ -478,9 +514,9 @@ public class Network
         {
             iter++;
             
-            for(Node r : bushes.keySet())
+            for(int idr = 0; idr < numZones; idr++)
             {
-                Bush bush = bushes.get(r);
+                Bush bush = ((Zone)nodes[idr]).bush;
                 bush.equilibrate();
             }
             
@@ -488,7 +524,7 @@ public class Network
             
             System.out.println(iter+"\t"+String.format("%.3f", gap));
         }
-        while(gap > Params.epsilon);
+        while(gap > Params.epsilon && iter <= max_iter);
 
         System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+" s");
     }
@@ -504,17 +540,19 @@ public class Network
         
         double sptt = 0.0;
         
-        for(Node r : demand.getOrigins())
+        for(int idr = 0; idr < numZones; idr++)
         {
+            Zone r = (Zone)nodes[idr];
             dijkstras(r);
             
-            for(Node s : demand.getDests(r))
+            for(int ids = 0; ids < numZones; ids++)
             {
-                sptt += s.cost * demand.getDemand(r, s);
+                Zone s = (Zone)nodes[ids];
+                sptt += r.getDemand(s) * s.cost;
             }
         }
         
-        return (tstt - sptt) / demand.getTotal();
+        return (tstt - sptt) / total_demand;
     }
     
     

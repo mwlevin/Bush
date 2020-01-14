@@ -6,6 +6,7 @@
 package bush;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,32 +22,23 @@ import java.util.Set;
  */
 public class Bush
 {
-    private Node origin;
+    private Zone origin;
 
-    private Map<Node, Double> demand;
-    
-    
-    private Map<Link, Double> flow;
-    
+    private double[] flow; // use the indices of each link
+    private boolean[] contains; 
     
     private Network network;
     
-    public Bush(Node origin, Network network)
+    public Bush(Zone origin, Network network)
     {
         
         this.network = network;
-        
-        demand = new HashMap<>();
-        
 
-        
-        demand = network.getDemand().getDemand(origin);
-        
         this.origin = origin;
         
         
-        flow = new HashMap<>();
-        
+        flow = new double[network.getLinks().length];
+        contains = new boolean[network.getLinks().length];
         
         loadDemand();
         
@@ -59,7 +51,7 @@ public class Bush
     
     public boolean contains(Link l)
     {
-        return flow.containsKey(l);
+        return contains[l.getIdx()];
     }
     
     public void topologicalSort()
@@ -70,12 +62,16 @@ public class Bush
             n.temp_mark = false;
         }
         
-        order = network.nodes.size();
+        
+
+
+        order = network.nodes.length;
         
         int num_marked = 0;
         
-        while(num_marked < network.nodes.size())
+        while(num_marked < network.nodes.length)
         {
+
             for(Node n : network.nodes)
             {
                 if(n.top_order == -1)
@@ -85,9 +81,7 @@ public class Bush
             }
         }
         
-        
-        
-        Collections.sort(network.nodes);
+        Arrays.sort(network.nodes);
 
     }
     
@@ -95,8 +89,10 @@ public class Bush
     {
         topologicalSort();
         
-        for(Link l : flow.keySet())
+        for(int idx = 0; idx < flow.length; idx++)
         {
+            Link l = network.links[idx];
+            
             if(l.getSource().top_order > l.getDest().top_order)
             {
                 return false;
@@ -150,7 +146,7 @@ public class Bush
         {
             for(Link uv : u.getBushOutgoing(this))
             {
-                if(getFlow(uv) == 0)
+                if(flow[uv.getIdx()] == 0)
                 {
                     continue;
                 }
@@ -230,7 +226,7 @@ public class Bush
         {
             for(Link uv : u.getBushOutgoing(this))
             {
-                if(getFlow(uv) == 0)
+                if(flow[uv.getIdx()] == 0)
                 {
                     continue;
                 }
@@ -273,8 +269,11 @@ public class Bush
             
             swapIter = 0;
             
+            
+            
             do
             {
+                
                 difference = swapFlows();
                 
                 if(Params.printBushEquilibrate)
@@ -300,6 +299,7 @@ public class Bush
 
         topologicalSort();
         
+        
         Tree min = minPath();
         Tree max = maxUsedPath();
         
@@ -310,12 +310,21 @@ public class Bush
         
         double max_diff = 0.0;
         
-        for(Node s : demand.keySet())
+        for(int ids = 0; ids < network.getNumZones(); ids++)
         {
+            
+            Zone s = (Zone)network.nodes[ids];
             n = s;
+            
+            if(origin.getDemand(s) == 0)
+            {
+                continue;
+            }
+            
             
             while(n != origin)
             {
+                
                 Iterable<Link> min_iter = min.iterator(n);
                 Iterable<Link> max_iter = max.iterator(n);
 
@@ -327,8 +336,7 @@ public class Bush
                     visited_min.add(l.getSource());
                 }
                 
-                //System.out.println(visited_min);
-
+                
                 for(Link l : max_iter)
                 {
                     if(visited_min.contains(l.getSource()))
@@ -369,6 +377,10 @@ public class Bush
                 max_diff = Math.max(max_diff, swapFlow(min_path, max_path));
                 n = m;
                 
+                if(m==null)
+                {
+                    throw new RuntimeException("m is null");
+                }
             }
         }
         
@@ -391,7 +403,7 @@ public class Bush
         
         for(Link l : max_path)
         {
-            max_moved = Math.min(getFlow(l), max_moved);
+            max_moved = Math.min(flow[l.getIdx()], max_moved);
         }
         
         //System.out.println(max_path);
@@ -453,11 +465,13 @@ public class Bush
         
         shortestPath();
         
-        Set<Link> remove = new HashSet<>();
+        List<Link> remove = new ArrayList<>();
         
-        for(Link l : flow.keySet())
+        for(int idx = 0; idx < flow.length; idx++)
         {
-            if(flow.get(l) == 0 && !checkCost(l))
+            Link l = network.links[idx];
+            
+            if(flow[idx] == 0 && !checkCost(l))
             {
                 remove.add(l);
             }
@@ -465,36 +479,30 @@ public class Bush
         
         for(Link l : remove)
         {
-            flow.remove(l);
+            flow[l.getIdx()] = 0;
+            contains[l.getIdx()] = false;
         }
         
-        for(Link l : network.links)
+
+        for(int idx = 0; idx < network.links.length; idx++)
         {
+            Link l = network.links[idx];
             if(!contains(l) && checkCost(l))
             {
-                flow.put(l, 0.0);
+                contains[idx] = true;
             }
         }
-
-
-        for(Link l : flow.keySet())
-        {
-            if(l.getSource().getId() == 21 || l.getDest().getId() == 21)
-            {
-                //System.out.println(l+"\t"+flow.get(l));
-                //System.out.println("\t"+l.getSource().cost+" "+l.getDest().cost+"\t"+l.getTT());
-            }
-        }
-
     }
     
     public void loadDemand()
     {
         network.dijkstras(origin);
         
-        for(Node s : demand.keySet())
+        for(int ids = 0; ids < network.getNumZones(); ids++)
         {
-            double d = demand.get(s);
+            Zone s = (Zone)network.nodes[ids];
+            
+            double d = origin.getDemand(s);
             
             Node curr = null;
             
@@ -549,29 +557,13 @@ public class Bush
             }
         }
     }
-    
-    
-    public double getFlow(Link l)
-    {
-        if(flow.containsKey(l))
-        {
-            return flow.get(l);
-        }
-        return 0;
-    }
+
     
     public void addFlow(Link l, double x)
     {
         l.x.addX(x);
-        
-        if(flow.containsKey(l))
-        {
-            flow.put(l, flow.get(l)+x);
-        }
-        else
-        {
-            flow.put(l, x);
-        }
+        flow[l.getIdx()] += x;
+        contains[l.getIdx()] = true;
     }
     
     
