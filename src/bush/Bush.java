@@ -29,6 +29,8 @@ public class Bush
     
     private Network network;
     
+    private Node[] sorted;
+    
     public Bush(Zone origin, Network network)
     {
         
@@ -80,17 +82,47 @@ public class Bush
                 }
             }
         }
+
         
-        Arrays.sort(network.nodes);
+        sorted = new Node[network.nodes.length];
+        
+        for(Node n : network.nodes)
+        {
+            sorted[n.top_order-1] = n;
+        }
 
     }
     
-    public boolean validateTopology()
+    
+    
+    public boolean testTopologicalSort()
     {
         topologicalSort();
         
         for(int idx = 0; idx < flow.length; idx++)
         {
+            if(!contains[idx])
+            {
+                continue;
+            }
+            Link l = network.links[idx];
+            
+            if(l.getSource().top_order > l.getDest().top_order)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public boolean validateTopology()
+    {
+        for(int idx = 0; idx < flow.length; idx++)
+        {
+            if(!contains[idx])
+            {
+                continue;
+            }
             Link l = network.links[idx];
             
             if(l.getSource().top_order > l.getDest().top_order)
@@ -142,7 +174,7 @@ public class Bush
         
         origin.cost = 0;
         
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             for(Link uv : u.getBushOutgoing(this))
             {
@@ -164,7 +196,7 @@ public class Bush
         
         Tree output = new Tree(origin);
         
-        for(Node n : network.nodes)
+        for(Node n : sorted)
         {
             output.put(n, n.pred);
         }
@@ -174,7 +206,7 @@ public class Bush
     
     public Tree minPath()
     {
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -184,7 +216,7 @@ public class Bush
         
         origin.cost = 0;
         
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             for(Link uv : u.getBushOutgoing(this))
             {
@@ -202,7 +234,7 @@ public class Bush
         
         Tree output = new Tree(origin);
         
-        for(Node n : network.nodes)
+        for(Node n : sorted)
         {
             output.put(n, n.pred);
         }
@@ -212,7 +244,7 @@ public class Bush
     
     public Tree maxUsedPath()
     {
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             u.cost = Integer.MIN_VALUE;
             u.pred = null;
@@ -222,7 +254,7 @@ public class Bush
         
         origin.cost = 0;
         
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             for(Link uv : u.getBushOutgoing(this))
             {
@@ -244,7 +276,7 @@ public class Bush
               
         Tree output = new Tree(origin);
         
-        for(Node n : network.nodes)
+        for(Node n : sorted)
         {
             output.put(n, n.pred);
         }
@@ -252,7 +284,7 @@ public class Bush
         return output;
     }
     
-    public void equilibrate()
+    public void equilibrate(double bush_gap)
     {
         if(Params.printBushEquilibrate)
         {
@@ -283,11 +315,11 @@ public class Bush
                 
                 swapIter ++;
             }
-            while(difference > Params.bush_gap);
+            while(difference > bush_gap);
             
             if(Params.printBushEquilibrate)
             {
-                System.out.println("\t"+bushIter+"\t"+difference+"\t"+validateTopology());
+                System.out.println("\t"+bushIter+"\t"+difference+"\t"+testTopologicalSort());
             }
             
             improveBush();
@@ -532,7 +564,7 @@ public class Bush
         
         
         
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             u.cost = Integer.MAX_VALUE;
             u.pred = null;
@@ -540,7 +572,7 @@ public class Bush
         
         origin.cost = 0;
         
-        for(Node u : network.nodes)
+        for(Node u : sorted)
         {
             for(Link uv : u.getBushOutgoing(this))
             {

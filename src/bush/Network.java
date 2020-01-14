@@ -512,7 +512,7 @@ public class Network
             for(int idr = 0; idr < numZones; idr++)
             {
                 Bush bush = ((Zone)nodes[idr]).bush;
-                bush.equilibrate();
+                bush.equilibrate(0.1);
             }
             
             gap = calcAEC();
