@@ -25,7 +25,8 @@ public class Network
     protected Node[] nodes;
     protected Link[] links;
     
-    protected int numZones;
+    private int numOrigins;
+    private int firstDest, lastDest;
     
     private double total_demand;
 
@@ -183,6 +184,8 @@ public class Network
         int numNodes = 0;
 
         
+        int numZones = 0;
+        
         // metadata
         while(true)
         {
@@ -213,22 +216,51 @@ public class Network
             }
         }
         
+        
+        numOrigins = numZones;
+        
+        int numNewDests = firstThruNode-1;
+        
+        firstDest = (firstThruNode - 1);
+        lastDest = numOrigins + numNewDests - 1;
+        
+        
+                
+        numNodes += numNewDests;
+        
         nodes = new Node[numNodes];
         
-        for(int i = 0; i < numNodes; i++)
+        
+        int dest_idx = 0;
+        
+        for(int i = 0; i < numOrigins; i++)
         {
             int id = i+1;
-            
-            Node node;
-            if(i < numZones)
-            {
-                node = new Zone(id, numZones);
-            }
-            else
-            {
-                node = new Node(id);
-            }
+            Node node = new Zone(id, getNumDests());
             nodes[i] = node;
+            keynodes.put(id, node);
+            
+            if(id >= firstThruNode)
+            {
+                dest_idx++;
+            }
+        }
+        
+        
+        for(int i = 0; i < numNewDests; i++)
+        {
+            int id = - (i + numOrigins + 1);
+            Node node = new DestNode(id, dest_idx++);
+            nodes[i + numOrigins] = node;
+            keynodes.put(id, node);
+        }
+        
+        for(int i = 0; i < numNodes - numOrigins - numNewDests; i++)
+        {
+            int id = i + numOrigins + numNewDests + 1;
+            
+            Node node = new Node(id);
+            nodes[i + numOrigins + numNewDests] = node;
             keynodes.put(id, node);
             
         }
@@ -240,16 +272,29 @@ public class Network
         
         for(int n = 0; n < numLinks; n++)
         {
-            int r = filein.nextInt();
-            int s = filein.nextInt();
+            int idi = filein.nextInt();
+            int idj = filein.nextInt();
             double Q = filein.nextDouble();
             double len = filein.nextDouble();
             double tf = filein.nextDouble();
             double a = filein.nextDouble();
             int b = (int)Math.round(filein.nextDouble());
             filein.nextLine();
+            
+            
+            Node i = keynodes.get(idi);
+            Node j;
+            
+            if(idj < firstThruNode)
+            {
+                j = keynodes.get(-idj);
+            }
+            else
+            {
+                j = keynodes.get(idj);
+            }
 
-            links[n] = new Link(keynodes.get(r), keynodes.get(s), tf, Q, a, b, len);
+            links[n] = new Link(i, j, tf, Q, a, b, len);
         }
         
         
@@ -309,7 +354,17 @@ public class Network
             }
             else
             {
-                Zone s = (Zone)keynodes.get(Integer.parseInt(next));
+                int ids = Integer.parseInt(next);
+                Dest s;
+                
+                if(ids < firstThruNode)
+                {
+                    s = (Dest)keynodes.get(-ids);
+                }
+                else
+                {
+                    s = (Zone)keynodes.get(ids);
+                }
                 
 
                 filein.next(); 
@@ -336,9 +391,29 @@ public class Network
     }    
 
     
-    public int getNumZones()
+    public int getFirstDest()
     {
-        return numZones;
+        return firstDest;
+    }
+    
+    public int getLastDest()
+    {
+        return lastDest;
+    }
+    
+    public int getFirstOrigin()
+    {
+        return 0;
+    }
+    
+    public int getNumDests()
+    {
+        return (lastDest - firstDest) + 1;
+    }
+    
+    public int getLastOrigin()
+    {
+        return numOrigins-1;
     }
     
     public int getNumNodes()
@@ -393,13 +468,13 @@ public class Network
             l.x.x_star = 0;
         }
         
-        for(int idr = 0; idr < numZones; idr++)
+        for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
         {
             Zone r = (Zone)nodes[idr];
             
             Tree tree = getSPTree(r);
 
-            for(int ids = 0; ids < numZones; ids++)
+            for(int ids = getFirstDest(); ids <= getLastDest(); ids++)
             {
                 Zone s = (Zone)nodes[ids];
                 
@@ -492,7 +567,7 @@ public class Network
         long time = System.nanoTime();
 
         // initial feasible bush
-        for(int idr = 0; idr < numZones; idr++)
+        for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
         {
             Zone r = (Zone)nodes[idr];
             r.bush = new Bush(r, this);
@@ -509,7 +584,7 @@ public class Network
         {
             iter++;
             
-            for(int idr = 0; idr < numZones; idr++)
+            for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
             {
                 Bush bush = ((Zone)nodes[idr]).bush;
                 bush.equilibrate(0.1);
@@ -535,12 +610,12 @@ public class Network
         
         double sptt = 0.0;
         
-        for(int idr = 0; idr < numZones; idr++)
+        for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
         {
             Zone r = (Zone)nodes[idr];
             dijkstras(r);
             
-            for(int ids = 0; ids < numZones; ids++)
+            for(int ids = getFirstDest(); ids <= getLastDest(); ids++)
             {
                 Zone s = (Zone)nodes[ids];
                 sptt += r.getDemand(s) * s.cost;

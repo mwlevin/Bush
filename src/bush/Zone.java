@@ -9,25 +9,30 @@ package bush;
  *
  * @author micha
  */
-public class Zone extends Node 
+public class Zone extends Node implements Dest
 {
     private double[] demand; // indexed to zones
     
     protected Bush bush;
     
-    public Zone(int id, int numZones)
+    public Zone(int id, int numDests)
     {
         super(id);
-        demand = new double[numZones];
+        demand = new double[numDests];
     }
     
-    public double getDemand(Zone s)
+    public double getDemand(Dest s)
     {
-        return demand[s.getIdx()];
+        return demand[s.getDestIdx()];
     }
     
-    public void setDemand(Zone z, double d)
+    public void setDemand(Dest s, double d)
     {
-        demand[z.getIdx()] = d;
+        demand[s.getDestIdx()] = d;
+    }
+    
+    public int getDestIdx()
+    {
+        return getIdx();
     }
 }

@@ -342,7 +342,7 @@ public class Bush
         
         double max_diff = 0.0;
         
-        for(int ids = 0; ids < network.getNumZones(); ids++)
+        for(int ids = network.getFirstDest(); ids <= network.getLastDest(); ids++)
         {
             
             Zone s = (Zone)network.nodes[ids];
@@ -530,7 +530,7 @@ public class Bush
     {
         network.dijkstras(origin);
         
-        for(int ids = 0; ids < network.getNumZones(); ids++)
+        for(int ids = network.getFirstDest(); ids <= network.getLastDest(); ids++)
         {
             Zone s = (Zone)network.nodes[ids];
             
