@@ -609,6 +609,12 @@ public class Network
         for(Link l : links)
         {
             tstt += l.x.getX() * l.getTT();
+            
+            if((""+tstt).equals("NaN"))
+            {
+                System.out.println(l.x.getX()+"\t"+l.getTT()+"\t"+tstt+"\t"+(""+l.getTT()).equals("NaN"));
+                System.exit(0);
+            }
         }
         
         double sptt = 0.0;
@@ -624,6 +630,8 @@ public class Network
                 sptt += r.getDemand((Dest)s) * s.cost;
             }
         }
+        
+        
         
         return (tstt - sptt) / total_demand;
     }

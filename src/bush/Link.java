@@ -84,11 +84,35 @@ public class Link
     
     public double getDeriv_TT(double x)
     {
+        if((""+x).equals("NaN"))
+        {
+            throw new RuntimeException("Flow is NaN");
+        }
+        
+        if(x < -Params.bush_gap)
+        {
+            throw new RuntimeException("Flow is negative");
+        }
+        
+        if(x < 0)
+        {
+            x = 0;
+        }
+        
         if(beta == 0)
         {
             return 0;
         }
-        return fftime * alpha * beta / capacity * Math.pow(x / capacity, beta - 1);
+        
+  
+        double output = fftime * alpha * beta / capacity * Math.pow(x / capacity, beta - 1);
+        
+        if((""+output).equals("NaN"))
+        {
+           throw new RuntimeException("Deriv is NaN"); 
+        }
+        
+        return output;
     }
     
     public double getReducedCost()
@@ -129,6 +153,15 @@ public class Link
     
     public double getTT(double x)
     {   
+        if(x < -Params.bush_gap)
+        {
+            throw new RuntimeException("Flow is negative");
+        }
+        
+        if(x < 0)
+        {
+            x = 0;
+        }
         return fftime * (1 + alpha * Math.pow(x / capacity, beta));
     }
 }

@@ -11,7 +11,7 @@ package bush;
  */
 public class Params 
 {
-    public static double bush_gap = 0.1;
+    public static double bush_gap = 0.01;
     
     //public static double epsilon = 0.1;
     

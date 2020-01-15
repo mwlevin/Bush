@@ -113,6 +113,15 @@ public class Bush
                 {
                     System.out.println("\t"+l.getDest()+"\t"+l.getDest().getBushIncoming(this)+"\t"+l.getDest().top_order);
                 }
+                
+                for(Link l : n.getBushOutgoing(this))
+                {
+                    System.out.println("\t\t"+l+"\t"+flow[l.getIdx()]+"\t"+l.getReducedCost());
+                }
+                for(Link l : n.getBushIncoming(this))
+                {
+                    System.out.println("\t\t"+l+"\t"+flow[l.getIdx()]+"\t"+l.getReducedCost());
+                }
                 throw new RuntimeException("Not DAG origin "+origin);
             }
         }
@@ -220,6 +229,11 @@ public class Bush
     
     public boolean checkReducedCosts()
     {
+        return checkReducedCosts(false);
+    }
+    
+    public boolean checkReducedCosts(boolean print)
+    {
         minPath();
         
         boolean output = true;
@@ -227,7 +241,7 @@ public class Bush
         {
             if(flow[l.getIdx()] > Params.bush_gap && l.getReducedCost() <- Params.bush_gap)
             {
-                if(Params.printReducedCosts)
+                if(print)
                 {
                     System.out.println("Negative reduced cost origin "+origin);
                     System.out.println(l+"\t"+flow[l.getIdx()]+"\t"+l.getSource().cost+"\t"+l.getTT()+"\t"+l.getDest().cost + "\t"+
@@ -419,7 +433,7 @@ public class Bush
             while(!checkReducedCosts());
             //while(difference > bush_gap);
             
-            if(!checkReducedCosts())
+            if(!checkReducedCosts(true))
             {
                 Tree min = minPath();
                 Tree max = maxUsedPath();
@@ -746,7 +760,7 @@ public class Bush
     {
         if((""+x).equals("NaN"))
         {
-            System.out.println("check");
+            throw new RuntimeException("flow="+x);
         }
         l.x.addX(x);
         flow[l.getIdx()] += x;
