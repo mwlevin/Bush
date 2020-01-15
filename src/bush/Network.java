@@ -595,7 +595,7 @@ public class Network
             
             gap = calcAEC();
             
-            System.out.println(iter+"\t"+String.format("%.3f", gap));
+            System.out.println(iter+"\t"+String.format("%.6f", gap));
         }
         while(gap > min_gap && iter < max_iter);
 

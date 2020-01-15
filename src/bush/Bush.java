@@ -225,7 +225,7 @@ public class Bush
         boolean output = true;
         for(Link l : network.links)
         {
-            if(flow[l.getIdx()] > 0 && l.getReducedCost() <- Params.bush_gap)
+            if(flow[l.getIdx()] > Params.bush_gap && l.getReducedCost() <- Params.bush_gap)
             {
                 if(Params.printReducedCosts)
                 {
@@ -626,13 +626,21 @@ public class Bush
         }
         */
 
-        while(max_moved >= Params.bush_gap && difference >= Params.bush_gap)
+        while(max_moved > 0  && difference > Params.bush_gap)
         {
  
             double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
             
+            double y;
+            if(max_moved < Params.bush_gap)
+            {
+                y = max_moved;
+            }
+            else
+            {
+                y = Math.min(max_moved, stepsize * difference / deriv);
+            }
 
-            double y = Math.min(max_moved, stepsize * difference / deriv);
             
             //System.out.println(deriv+" "+y+" "+difference+" "+stepsize+" "+max_moved);
 
@@ -676,7 +684,7 @@ public class Bush
         {
             Link l = network.links[idx];
             
-            if(flow[idx] == 0 && !checkCost(l))
+            if(flow[idx] < Params.bush_gap && !checkCost(l))
             {
                 remove.add(l);
             }
