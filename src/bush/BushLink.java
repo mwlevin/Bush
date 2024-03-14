@@ -11,7 +11,7 @@ package bush;
  */
 public class BushLink
 {
-    private Node bush_source, bush_dest; // clones of the nodes
+    private Node bush_source, bush_dest; // references to the nodes
     private Link link;
     
     public double x; // this is origin flow!!

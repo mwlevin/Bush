@@ -43,6 +43,9 @@ public class Flow
     
     public void addX(double delta)
     {
+        if(x + delta < -Params.flow_epsilon){
+            throw new RuntimeException("Negative flow on link - "+(x+delta));
+        }
         x += delta;
     }
 }

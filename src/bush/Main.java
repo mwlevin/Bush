@@ -18,14 +18,33 @@ public class Main {
      */
     public static void main(String[] args) throws IOException
     {
+        
+        Network test = new Network("grid3");
+
+        
+        Tree minTree = test.getSPTree(test.findNode(1));
+        
+        System.out.println(minTree.getPath(test.findNode(2)));
+        
+        Bush bush = new Bush((Zone)test.findNode(1), test);
+        
+        test.printLinkFlows();
+        
+        bush.checkPAS();
+        
+        System.out.println(bush.getRelevantPAS());
+        
+        /*
         long time = System.nanoTime();
         Network test = new Network("Winnipeg");
         
         //test.frankWolfe(10, 0);
-        test.algorithmB(10, 0);
+        test.algorithmB(20, 0);
         
         
         System.out.println("Time: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9));
+        */
+        
         
     }
     

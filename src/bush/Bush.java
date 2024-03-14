@@ -30,6 +30,7 @@ public class Bush
     
     private Network network;
     
+    private Map<Link, HashSet<PAS>> relevantPAS;
     private ArrayList<Node> sorted;
     
     public Bush(Zone origin, Network network)
@@ -38,8 +39,9 @@ public class Bush
         this.network = network;
 
         this.origin = origin;
+        origin.bush = this;
         
-        
+        relevantPAS = new HashMap<>();
         sorted = new ArrayList<>();
         flow = new double[network.getLinks().length];
         contains = new boolean[network.getLinks().length];
@@ -50,6 +52,15 @@ public class Bush
         
         
        
+    }
+    
+    public Map<Link, HashSet<PAS>> getRelevantPAS(){
+        return relevantPAS;
+    }
+    
+    
+    public double getFlow(Link l){
+        return flow[l.getIdx()];
     }
     
     
@@ -127,73 +138,7 @@ public class Bush
         }
     }
     
-    /*
-    public void topologicalSort()
-    {
-        for(Node n : network.nodes)
-        {
-            n.top_order = -1;
-            n.temp_mark = false;
-        }
-        
-        
-
-
-        order = network.nodes.length;
-        
-        int num_marked = 0;
-        
-        while(num_marked < network.nodes.length)
-        {
-
-            for(Node n : network.nodes)
-            {
-                if(n.top_order == -1)
-                {
-                    num_marked += visit(n);
-                }
-            }
-        }
-
-        
-        sorted = new Node[network.nodes.length];
-        
-        for(Node n : network.nodes)
-        {
-            sorted[n.top_order-1] = n;
-        }
-
-    }
     
-    int order = 0;
-    
-    public int visit(Node u)
-    {
-        if(u.top_order >= 0)
-        {
-            return 0;
-        }
-        if(u.temp_mark)
-        {
-            throw new RuntimeException("Not DAG at "+u);
-        }
-        
-        u.temp_mark = true;
-        
-        int output = 0;
-        
-        for(Link uv : u.getBushOutgoing(this))
-        {
-            output += visit(uv.getDest());
-        }
-        
-        u.temp_mark = false;
-        u.top_order = order--;
-        output++;
-        
-        return output;
-    }
-    */
     
     public boolean testTopologicalSort()
     {
@@ -272,6 +217,7 @@ public class Bush
     }
     
     
+    
     public Tree minUsedPath()
     {
         for(Node u : network.nodes)
@@ -308,7 +254,7 @@ public class Bush
         
         for(Node n : sorted)
         {
-            output.put(n, n.pred);
+            output.put(n.pred);
         }
         
         return output;
@@ -349,8 +295,105 @@ public class Bush
         
         for(Node n : sorted)
         {
-            output.put(n, n.pred);
+            output.put(n.pred);
         }
+        
+        return output;
+    }
+    
+    
+    // look for links that need to be included in a PAS
+    public void checkPAS(){
+        
+        Tree minPathTree = network.getSPTree(origin);
+        
+        
+        
+        // look for all used links not part of the tree of least cost routes
+        for(Link l : network.links){
+            if(getFlow(l) > 0 && !minPathTree.containsLink(l)){
+                // we need a PAS!
+                if(!hasPAS(l)){
+                    createPAS(minPathTree, l);
+                }
+            }
+        }
+        
+    }
+    
+    public boolean hasPAS(Link a){
+        return relevantPAS.containsKey(a) && relevantPAS.get(a).size() > 0;
+    }
+    
+    public void removePAS(PAS p){
+        relevantPAS.get(p.getEndLink()).remove(p);
+        
+        if(relevantPAS.get(p.getEndLink()).size() == 0){
+            relevantPAS.remove(p.getEndLink());
+        }
+    }
+    
+    
+    // create a PAS for link a
+    public PAS createPAS(Tree minPathTree, Link a){
+        
+        System.out.println("Create PAS for "+a);
+        
+        PAS output = new PAS();
+        
+        // min path to a.dest
+        Set<Node> minPath = minPathTree.getPathAsNodeSet(a.getDest());
+        
+        System.out.println("minPath is "+minPath);
+        
+        // store trace to avoid repeating breadth first search
+        Map<Link, Link> trace = new HashMap<>();
+        
+        Queue<Link> unvisited = new LinkedList<>();
+        
+        unvisited.add(a);
+        
+        Link firstSimilar = null;
+        
+        while(!unvisited.isEmpty()){
+            Link jk = unvisited.remove();
+            Node j = jk.getSource();
+            
+            if(minPath.contains(j)){
+                firstSimilar = jk;
+                break;
+            }
+            
+            
+            
+            for(Link ij : j.getIncoming()){
+                if(getFlow(ij) > 0){
+                    unvisited.add(ij);
+                    trace.put(ij, jk);
+                }
+            }
+        }
+        
+        System.out.println("firstSimilar is "+firstSimilar);
+        
+        // trace firstSimilar to a in min path tree: this is the forward side of the PAS
+        for(Link l : minPathTree.trace(firstSimilar.getSource(), a.getDest())){
+            output.addForwardLink(l);
+        }
+        
+        // trace firstSimilar to a in used flow bush: this is the backward side of the PAS
+        Link curr = firstSimilar;
+        output.addBackwardLink(firstSimilar);
+        do{
+            curr = trace.get(curr);
+            output.addBackwardLink(curr);
+        }
+        while(curr != a);
+        
+        output.setEndLink(a);
+        output.addRelevantOrigin(origin);
+        
+        System.out.println("PAS is "+output);
         
         return output;
     }
@@ -391,7 +434,7 @@ public class Bush
         
         for(Node n : sorted)
         {
-            output.put(n, n.pred);
+            output.put(n.pred);
         }
         
         return output;
@@ -461,6 +504,9 @@ public class Bush
             
             improveBush();
         }
+        
+        
+        //validateDemand();
     }
     
     public double getMaxFlow(Path path)
@@ -604,7 +650,7 @@ public class Bush
     }
     
     /**
-     * return whether flow was swapped
+     * return how much flow was swapped
      */
     public double swapFlow(Path min_path, Path max_path)
     {
@@ -756,8 +802,36 @@ public class Bush
         }
     }
     
+    
+    public boolean validateDemand(){
+
+        for(Node s : sorted){
+            if(s != origin && (s instanceof Dest)){
+                double d = origin.getDemand((Dest)s);
+                
+                double actual = 0;
+                
+                for(Link id : s.getIncoming()){
+                    actual += flow[id.getIdx()];
+                }
+                
+                for(Link dj : s.getOutgoing()){
+                    actual -= flow[dj.getIdx()];
+                }
+                
+                if(Math.abs(d - actual) > Params.bush_gap){
+                    throw new RuntimeException("Origin "+origin+": demand to "+s+" is "+d+" but flow is "+actual);
+                    //return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
     public void addFlow(Link l, double x)
     {
+
         if((""+x).equals("NaN"))
         {
             throw new RuntimeException("flow="+x);
@@ -765,6 +839,15 @@ public class Bush
         l.x.addX(x);
         flow[l.getIdx()] += x;
         contains[l.getIdx()] = true;
+    }
+    
+    // maybe store this as a map<Link, list<PAS>> mapping end link of PAS
+    public void addRelevantPAS(PAS p){
+        if(!relevantPAS.containsKey(p.getEndLink())){
+            relevantPAS.put(p.getEndLink(), new HashSet<>());
+        }
+        
+        relevantPAS.get(p.getEndLink()).add(p);
     }
     
     

@@ -6,8 +6,10 @@
 package bush;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A tree is a map of nodes to their predecessor link.
@@ -31,41 +33,70 @@ public class Tree
         return origin;
     }
     
-    public void put(Node node, Link link)
+    public void put(Link link)
     {
-        map[node.getIdx()] = link;
+        map[link.getDest().getIdx()] = link;
     }
     
-    public boolean containsKey(Node node)
+    public boolean containsNode(Node node)
     {
         return map[node.getIdx()] != null;
+    }
+    
+    public boolean containsLink(Link link){
+        return map[link.getDest().getIdx()] != null && map[link.getDest().getIdx()] == link;
     }
     
     public Link get(Node node)
     {
         return map[node.getIdx()];
     }
+    
 
     
     /**
      * Iterates over the path (links) from Node r to Node s, in backwards order
      */
+    
+    public Iterable<Link> trace(Node s){
+        return trace(origin, s);
+    }
 
-    public Iterable<Link> trace(Node s)
+    public Iterable<Link> trace(Node i, Node j)
     {
         return new Iterable<Link>()
         {
             public Iterator<Link> iterator()
             {
-                return new PathIterator(s);
+                return new PathIterator(i, j);
             }
         };
     }
     
-    public Path getPath(Node s)
+    
+    public Set<Node> getPathAsNodeSet(Node j){
+        return getPathAsNodeSet(origin, j);
+    }
+    
+    public Set<Node> getPathAsNodeSet(Node i, Node j){
+        Set<Node> output = new HashSet<>();
+        
+        output.add(j);
+        for(Link curr : trace(i, j))
+        {
+            output.add(curr.getSource());
+        }
+        return output;
+    }
+    
+    public Path getPath(Node j){
+        return getPath(origin, j);
+    }
+    
+    public Path getPath(Node i, Node j)
     {
         Path output = new Path();
-        for(Link curr : trace(s))
+        for(Link curr : trace(i, j))
         {
             output.add(0, curr);
         }
@@ -75,9 +106,12 @@ public class Tree
     class PathIterator implements Iterator<Link>
     {
         private Node curr;
-        public PathIterator(Node s)
+        private Node start;
+        
+        public PathIterator(Node i, Node j)
         {
-            curr = s;
+            curr = j;
+            start = i;
         }
         
         public Link next()
@@ -89,7 +123,7 @@ public class Tree
         
         public boolean hasNext()
         {
-            return containsKey(curr) && get(curr) != null;
+            return containsNode(curr) && curr != start && get(curr) != null;
         }
     }
 }

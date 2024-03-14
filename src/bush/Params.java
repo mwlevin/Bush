@@ -11,7 +11,10 @@ package bush;
  */
 public class Params 
 {
-    public static double bush_gap = 0.01;
+    public static final double bush_gap = 0.01;
+    public static final double pas_cost_mu = 0.5;
+    public static final double pas_flow_mu = 0.25;
+    public static final double flow_epsilon = 0.01;
     
     //public static double epsilon = 0.1;
     

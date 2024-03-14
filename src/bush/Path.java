@@ -15,9 +15,25 @@ public class Path extends ArrayList<Link>
 {
     private boolean backwards;
     
+    
     public Path()
     {
         backwards = false;
+        
+    }
+    
+    public boolean contains(Node n){
+        for(Link l : this){
+            if(l.getDest() == n){
+                return true;
+            }
+        }
+        
+        if(size() > 0 && get(0).getSource() == n){
+            return true;
+        }
+        
+        return false;
     }
     
     public Path(boolean backwards)

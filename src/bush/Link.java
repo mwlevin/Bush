@@ -56,6 +56,10 @@ public class Link
         return id;
     }
     
+    public double getFlow(){
+        return x.getX();
+    }
+    
     
     public double getAlpha()
     {

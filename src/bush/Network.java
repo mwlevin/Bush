@@ -103,10 +103,18 @@ public class Network
         
         for(Node n : nodes)
         {
-            output.put(n, n.pred);
+            if(n != r){
+                output.put(n.pred);
+            }
         }
         
         return output;
+    }
+    
+    public void printLinkFlows(){
+        for(Link l : links){
+            System.out.println(l.getSource()+"\t"+l.getDest()+"\t"+l.x.getX()+"\t"+l.getTT());
+        }
     }
     
     /*
