@@ -32,8 +32,16 @@ public class Main {
         
         bush.checkPAS();
         
-        System.out.println(bush.getRelevantPAS());
         
+        PAS p52 = bush.getRelevantPAS().get(test.findLink(52)).iterator().next();
+        
+        System.out.println(p52);
+        
+        p52.flowShift();
+        
+        test.printLinkFlows();
+        
+        System.out.println(p52.getTT(0));
         /*
         long time = System.nanoTime();
         Network test = new Network("Winnipeg");

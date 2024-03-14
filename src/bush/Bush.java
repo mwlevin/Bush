@@ -30,7 +30,8 @@ public class Bush
     
     private Network network;
     
-    private Map<Link, HashSet<PAS>> relevantPAS;
+    private PASList relevantPAS;
+    
     private ArrayList<Node> sorted;
     
     public Bush(Zone origin, Network network)
@@ -41,7 +42,8 @@ public class Bush
         this.origin = origin;
         origin.bush = this;
         
-        relevantPAS = new HashMap<>();
+        relevantPAS = new PASList();
+        
         sorted = new ArrayList<>();
         flow = new double[network.getLinks().length];
         contains = new boolean[network.getLinks().length];
@@ -54,9 +56,7 @@ public class Bush
        
     }
     
-    public Map<Link, HashSet<PAS>> getRelevantPAS(){
-        return relevantPAS;
-    }
+    
     
     
     public double getFlow(Link l){
@@ -313,25 +313,33 @@ public class Bush
         for(Link l : network.links){
             if(getFlow(l) > 0 && !minPathTree.containsLink(l)){
                 // we need a PAS!
-                if(!hasPAS(l)){
-                    createPAS(minPathTree, l);
+                if(!hasRelevantPAS(l)){
+                    
+                    // should check if we can borrow one from network
+                    //if(network.getPAS(l) != null){
+                        createPAS(minPathTree, l);
+                    //}
                 }
             }
         }
         
     }
     
-    public boolean hasPAS(Link a){
-        return relevantPAS.containsKey(a) && relevantPAS.get(a).size() > 0;
+    public boolean hasRelevantPAS(Link a){
+        if(!relevantPAS.containsKey(a)){
+            return false;
+        }
+        for(PAS p : relevantPAS.get(a)){
+            if(p.isCostEffective() && p.isFlowEffective()){
+                return true;
+            }
+        }
+        
+        return false;
     }
     
-    public void removePAS(PAS p){
-        relevantPAS.get(p.getEndLink()).remove(p);
-        
-        if(relevantPAS.get(p.getEndLink()).size() == 0){
-            relevantPAS.remove(p.getEndLink());
-        }
-    }
+    
+    
     
     
     // create a PAS for link a
@@ -395,7 +403,13 @@ public class Bush
         
         System.out.println("PAS is "+output);
         
+        network.addPAS(output);
+        
         return output;
+    }
+    
+    public PASList getRelevantPAS(){
+        return relevantPAS;
     }
     
     public Tree maxUsedPath()
@@ -843,11 +857,7 @@ public class Bush
     
     // maybe store this as a map<Link, list<PAS>> mapping end link of PAS
     public void addRelevantPAS(PAS p){
-        if(!relevantPAS.containsKey(p.getEndLink())){
-            relevantPAS.put(p.getEndLink(), new HashSet<>());
-        }
-        
-        relevantPAS.get(p.getEndLink()).add(p);
+        relevantPAS.add(p);
     }
     
     

@@ -75,7 +75,7 @@ public class PAS {
     // max flow that can be shifted both in forward and negative directions
     
     
-    private double getTT(double topshift){
+    public double getTT(double topshift){
         double output = 0;
         
         for(Link l : links.keySet()){
@@ -165,7 +165,8 @@ public class PAS {
         double top = overallMaxShift;
         
         while(top - bot > 0.01){
-            double mid = top - bot;
+            double mid = (top + bot)/2;
+            
             
             double check = getTT(mid);
             

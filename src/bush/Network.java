@@ -29,10 +29,15 @@ public class Network
     private int firstDest, lastDest;
     
     private double total_demand;
+    
+    
+    private PASList allPAS;
 
     public Network(String name) throws IOException
     {
         readNetwork(name);
+        
+        allPAS = new PASList();
     }
 
     
@@ -574,6 +579,11 @@ public class Network
         return output;
     }
     
+    
+    public void tapas(int max_iter, double min_gap){
+        
+        
+    }
 
     public void algorithmB(int max_iter, double min_gap)
     {
@@ -692,5 +702,9 @@ public class Network
         return findLink(findNode(idi), findNode(idj));
     }
     
+    
+    public void addPAS(PAS p){
+        allPAS.add(p);
+    }
  
 }
