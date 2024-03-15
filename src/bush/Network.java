@@ -32,7 +32,8 @@ public class Network
     
     
     private PASList allPAS;
-
+    private int iter;
+    
     public Network(String name) throws IOException
     {
         readNetwork(name);
@@ -455,7 +456,7 @@ public class Network
     {
         
         double gap = Params.INFTY;
-        int iter = 0;
+        iter = 0;
         
         System.out.println("Iter\tStep size\tAEC");
         
@@ -582,7 +583,7 @@ public class Network
     
     public void tapas(int max_iter, double min_gap){
         
-        
+        iter = 0;
     }
 
     public void algorithmB(int max_iter, double min_gap)
@@ -599,7 +600,7 @@ public class Network
         
         System.out.println("Iter\tAEC");
         
-        int iter = 0;
+        iter = 0;
         
         do
         {
@@ -619,11 +620,8 @@ public class Network
 
     }
 
-    
-    public double calcAEC()
-    {
-        double tstt = 0.0;
-        
+    public double getTSTT(){
+        double tstt = 0;
         for(Link l : links)
         {
             tstt += l.x.getX() * l.getTT();
@@ -634,7 +632,10 @@ public class Network
                 System.exit(0);
             }
         }
-        
+        return tstt;
+    }
+    
+    public double getSPTT(){
         double sptt = 0.0;
         
         for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
@@ -648,7 +649,13 @@ public class Network
                 sptt += r.getDemand((Dest)s) * s.cost;
             }
         }
-        
+        return sptt;
+    }
+    
+    public double calcAEC()
+    {
+        double tstt = getTSTT();
+        double sptt = getSPTT();
         
         
         return (tstt - sptt) / total_demand;
@@ -702,9 +709,68 @@ public class Network
         return findLink(findNode(idi), findNode(idj));
     }
     
+    public PAS findPAS(Link ij, Bush b){
+        
+        if(!allPAS.containsKey(ij)){
+            return null;
+        }
+        
+        PAS best = null;
+        double max = Params.bush_gap;
+        
+        
+        for(PAS p : allPAS.get(ij)){
+            double temp = p.maxFlowShift(b);
+            
+
+            if(temp > max && p.isCostEffective()){
+                max = temp;
+                best = p;
+            }
+        }
+        
+        return best;
+    }
     
     public void addPAS(PAS p){
         allPAS.add(p);
+        p.setLastIterFlowShift(iter);
     }
  
+    public boolean equilibratePAS(){
+        boolean output = false;
+        
+        for(PAS p : allPAS){
+            if(p.flowShift()){
+                p.setLastIterFlowShift(iter);
+                output = true;
+            }
+        }
+        
+        return output;
+    }
+    
+    public void printPAS(){
+        for(PAS p : allPAS){
+            System.out.println(p.getEndLink()+" - "+p+" "+p.getCostDifference()+" "+p.isCostEffective());
+        }
+    }
+    
+    public void removePAS(){
+        List<PAS> removed = new ArrayList<>();
+        
+        for(PAS p : allPAS){
+            if(p.getLastIterFlowShift() < iter-2){
+                removed.add(p);
+            }
+        }
+        
+        for(PAS p : removed){
+            allPAS.remove(p);
+            
+            for(Zone r : p.getRelevantOrigins()){
+                r.bush.removePAS(p);
+            }
+        }
+    }
 }

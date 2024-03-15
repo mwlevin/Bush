@@ -6,6 +6,7 @@ package bush;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,13 +14,15 @@ import java.util.Set;
  *
  * @author michaellevin
  */
-public class PASList {
+public class PASList implements Iterable<PAS>{
     
-    private Map<Link, HashSet<PAS>> set;
+    private HashMap<Link, HashSet<PAS>> set;
     
     public PASList(){
         set = new HashMap<>();
     }
+    
+    
     
     public void add(PAS p){
         if(!set.containsKey(p.getEndLink())){
@@ -51,5 +54,51 @@ public class PASList {
     
     public Map<Link, HashSet<PAS>> getPAS(){
         return set;
+    }
+    
+    
+    
+    
+    public Iterator<PAS> iterator(){
+        return new PASListIterator();
+    }
+    
+    class PASListIterator implements Iterator<PAS>
+    {
+        private Iterator<PAS> setiterator;
+        private Iterator<Link> keyiterator;
+        
+        public PASListIterator(){
+            keyiterator = set.keySet().iterator();
+        }
+        
+        public PAS next(){
+            refreshIterator();
+            
+            if(setiterator == null){
+                return null;
+            }
+            else{
+                return setiterator.next();
+            }
+        }
+        
+        public void refreshIterator(){
+            
+            while(setiterator == null || !setiterator.hasNext()){
+                if(keyiterator.hasNext()){
+                    setiterator = set.get(keyiterator.next()).iterator();
+                }
+                else{
+                    break;
+                }
+            }
+        }
+        
+        public boolean hasNext(){
+            refreshIterator();
+            
+            return setiterator != null && setiterator.hasNext();
+        }
     }
 }

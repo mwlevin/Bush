@@ -99,6 +99,7 @@ public class Path extends ArrayList<Link>
             
             output += get(size()-1).getDest()+"]";
         }
+        
         return output;
     }
 

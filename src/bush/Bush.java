@@ -316,9 +316,15 @@ public class Bush
                 if(!hasRelevantPAS(l)){
                     
                     // should check if we can borrow one from network
-                    //if(network.getPAS(l) != null){
+                    PAS fromNetwork = network.findPAS(l, this);
+                    if(fromNetwork == null){
+                        System.out.println("Create PAS for "+l);
                         createPAS(minPathTree, l);
-                    //}
+                    }
+                    else{
+                        System.out.println("Take PAS for "+l);
+                        fromNetwork.addRelevantOrigin(origin);
+                    }
                 }
             }
         }
@@ -338,6 +344,10 @@ public class Bush
         return false;
     }
     
+    public void removePAS(PAS p){
+        relevantPAS.remove(p);
+    }
+    
     
     
     
@@ -345,7 +355,7 @@ public class Bush
     // create a PAS for link a
     public PAS createPAS(Tree minPathTree, Link a){
         
-        System.out.println("Create PAS for "+a);
+        
         
         PAS output = new PAS();
         
@@ -398,6 +408,7 @@ public class Bush
         }
         while(curr != a);
         
+        output.setStart(firstSimilar.getDest());
         output.setEndLink(a);
         output.addRelevantOrigin(origin);
         
@@ -411,6 +422,8 @@ public class Bush
     public PASList getRelevantPAS(){
         return relevantPAS;
     }
+    
+    
     
     public Tree maxUsedPath()
     {
@@ -499,7 +512,7 @@ public class Bush
                 Path minPath = min.getPath(network.findNode(id));
                 System.out.println(minPath+"\t"+minPath.getTT());
                 Path maxPath = max.getPath(network.findNode(id));
-                 System.out.println(maxPath +"\t"+maxPath.getTT()+"\t"+getMaxFlow(maxPath));
+                System.out.println(maxPath +"\t"+maxPath.getTT()+"\t"+getMaxFlow(maxPath));
                 
                 System.out.println(swapFlow(minPath, maxPath));
                 
@@ -531,6 +544,10 @@ public class Bush
             max_moved = Math.min(flow[l.getIdx()], max_moved);
         }
         return max_moved;
+    }
+    
+    public void removeCyclicFlows(){
+        
     }
     
     public double swapFlows()
@@ -817,6 +834,8 @@ public class Bush
     }
     
     
+    
+    
     public boolean validateDemand(){
 
         for(Node s : sorted){
@@ -852,7 +871,8 @@ public class Bush
         }
         l.x.addX(x);
         flow[l.getIdx()] += x;
-        contains[l.getIdx()] = true;
+        
+        contains[l.getIdx()] = flow[l.getIdx()] > Params.bush_gap;
     }
     
     // maybe store this as a map<Link, list<PAS>> mapping end link of PAS

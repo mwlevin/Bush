@@ -4,8 +4,10 @@
  */
 package bush;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,7 +16,8 @@ import java.util.Set;
  * @author michaellevin
  */
 public class PAS {
-    private HashMap<Link, Integer> links;
+    private List<Link> forwardlinks;
+    private List<Link> backwardlinks;
     
     // set of origins relevant to this PAS
     private Set<Zone> relevant;
@@ -26,8 +29,13 @@ public class PAS {
     private Link endLink;
     
     public PAS(){
-        links = new HashMap<>();
+        forwardlinks = new ArrayList<>();
+        backwardlinks = new ArrayList<>();
         relevant = new HashSet<>();
+    }
+    
+    public Set<Zone> getRelevantOrigins(){
+        return relevant;
     }
     
     public int getLastIterFlowShift(){
@@ -65,11 +73,11 @@ public class PAS {
     }
     
     public void addForwardLink(Link l){
-        links.put(l, 1);
+        forwardlinks.add(l);
     }
     
     public void addBackwardLink(Link l){
-        links.put(l, -1);
+        backwardlinks.add(l);
     }
     
     // max flow that can be shifted both in forward and negative directions
@@ -78,9 +86,12 @@ public class PAS {
     public double getTT(double topshift){
         double output = 0;
         
-        for(Link l : links.keySet()){
-            // multiply by links.get(l) to indicate sign of shift (+ or -)
-            output += links.get(l) * l.getTT(l.getFlow() + topshift * links.get(l));
+        for(Link l : forwardlinks){
+            output += l.getTT(l.getFlow() + topshift);
+        }
+        
+        for(Link l : backwardlinks){
+            output -= l.getTT(l.getFlow() - topshift);
         }
         
         return output;
@@ -96,18 +107,16 @@ public class PAS {
         double minflow = Double.MAX_VALUE; 
         double flowlastsegment = 0;
         
-        for(Link l : links.keySet()){
+        for(Link l : backwardlinks){
             // only look at high cost segment
-            if(links.get(l) == -1){
-                double totalFlow = 0;
-                for(Zone r : relevant){
-                    totalFlow += r.bush.getFlow(l);
-                }
-                
-                minflow = Math.min(minflow, totalFlow);
-                if(l.getDest() == getEnd()){
-                    flowlastsegment = totalFlow;
-                }
+            double totalFlow = 0;
+            for(Zone r : relevant){
+                totalFlow += r.bush.getFlow(l);
+            }
+
+            minflow = Math.min(minflow, totalFlow);
+            if(l.getDest() == getEnd()){
+                flowlastsegment = totalFlow;
             }
         }
         
@@ -115,16 +124,51 @@ public class PAS {
         
     }
     
+    
     public boolean isCostEffective(){
-        double cdiff = 0;
         
-        // add cost on the high-cost segment (backwards link); subtract cost on the least-cost segment (forward links)
-        for(Link l : links.keySet()){
-            cdiff += -l.getTT() * links.get(l);
+        double forwardcost = getForwardCost();
+        double backwardcost = getBackwardCost();
+        
+        double costdiff = backwardcost - forwardcost;
+        
+        
+        return costdiff > Params.pas_cost_mu * forwardcost;
+    }
+    
+    public double getForwardCost(){
+        double forwardcost = 0;
+        
+        for(Link l : forwardlinks){
+            forwardcost += l.getTT();
         }
         
+        return forwardcost;
+    }
+    
+    public double getBackwardCost(){
+        double backwardcost = 0;
         
-        return cdiff >= Params.pas_cost_mu * getReducedCost();
+        for(Link l : backwardlinks){
+            backwardcost += l.getTT();
+        }
+        
+        return backwardcost;
+    }
+    
+    public double getCostDifference(){
+        return getBackwardCost() - getForwardCost();
+    }
+    
+    public double maxFlowShift(Bush b){
+        double max = Double.MAX_VALUE;
+            
+        for(Link l : backwardlinks){
+            // check flow on link if l in backwards direction
+            max = Math.min(max, b.getFlow(l));
+
+        }
+        return max;
     }
     
     public Map<Bush, Double> maxFlowShift(){
@@ -132,25 +176,18 @@ public class PAS {
         Map<Bush, Double> maxFlowPerBush = new HashMap<>();
         
         for(Zone r : relevant){
-
-            double max = Double.MAX_VALUE;
-            
-            for(Link l : links.keySet()){
-                // check flow on link if l in backwards direction
-                if(links.get(l) == -1){
-
-                    max = Math.min(max, r.bush.getFlow(l));
-                }
-            }
-            
-            maxFlowPerBush.put(r.bush, max);
+            maxFlowPerBush.put(r.bush, maxFlowShift(r.bush));
         }
         
         return maxFlowPerBush;
     
     }
     
-    public void flowShift(){
+    public boolean flowShift(){
+        
+        if(!isCostEffective()){
+            return false;
+        }
         
         double overallMaxShift = 0;
         
@@ -167,7 +204,6 @@ public class PAS {
         while(top - bot > 0.01){
             double mid = (top + bot)/2;
             
-            
             double check = getTT(mid);
             
             if(check < 0){
@@ -178,27 +214,32 @@ public class PAS {
             }
         }
         
-        for(Link l : links.keySet()){
+
+        for(Link l : forwardlinks){
             for(Bush b : maxFlowShift.keySet()){
                 // proportion allocated to bush is bush max shift / total max shift
-                // multiply by links.get(l) to indicate sign of shift (+ or -)
-                b.addFlow(l, maxFlowShift.get(b) / overallMaxShift * top * links.get(l));
+                b.addFlow(l, maxFlowShift.get(b) / overallMaxShift * top);
             }
         }
+        
+        for(Link l : backwardlinks){
+            for(Bush b : maxFlowShift.keySet()){
+                // proportion allocated to bush is bush max shift / total max shift
+                b.addFlow(l, -maxFlowShift.get(b) / overallMaxShift * top);
+            }
+        }
+        
+        return true;
     }
     
     public String toString(){
         String output = "[";
-        for(Link l : links.keySet()){
-            if(links.get(l) > 0){
-                output += l+", ";
-            }
+        for(Link l : forwardlinks){
+            output += l+", ";
         }
         
-        for(Link l : links.keySet()){
-            if(links.get(l) < 0){
-                output += "-"+l+", ";
-            }
+        for(Link l : backwardlinks){
+            output += "-"+l+", ";
         }
         
         output = output.substring(0, output.length()-2);
