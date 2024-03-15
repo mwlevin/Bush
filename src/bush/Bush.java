@@ -49,11 +49,6 @@ public class Bush
         contains = new boolean[network.getLinks().length];
         
         loadDemand();
-        
-        
-        
-        
-       
     }
     
     

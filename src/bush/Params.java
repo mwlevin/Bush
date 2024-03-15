@@ -16,6 +16,9 @@ public class Params
     public static double pas_flow_mu = 0.025;
     public static double flow_epsilon = 0.01;
     
+    
+    public static double tapas_equilibrate_iter = 3;
+    
     //public static double epsilon = 0.1;
     
     public static final double INFTY = 1.0e7;

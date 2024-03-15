@@ -21,11 +21,9 @@ public class Main {
         
         Network test = new Network("grid3");
 
+        test.tapas(4, 0);
         
-        Tree minTree = test.getSPTree(test.findNode(1));
-        
-        System.out.println(minTree.getPath(test.findNode(2)));
-        
+        /*
         Bush bush = new Bush((Zone)test.findNode(1), test);
         
         test.printLinkFlows();
@@ -68,6 +66,8 @@ public class Main {
         test.printLinkFlows();
         
         System.out.println(test.getTSTT()+" "+test.getSPTT());
+        */
+        
         
         /*
         PAS p52 = bush.getRelevantPAS().get(test.findLink(52)).iterator().next();

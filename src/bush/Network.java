@@ -22,6 +22,7 @@ import java.util.Set;
  */
 public class Network 
 {
+    protected Zone[] origins;
     protected Node[] nodes;
     protected Link[] links;
     
@@ -243,6 +244,7 @@ public class Network
         numNodes += numNewDests;
         
         nodes = new Node[numNodes];
+        origins = new Zone[numOrigins];
         
         
         int dest_idx = 0;
@@ -252,6 +254,7 @@ public class Network
             int id = i+1;
             Node node = new Zone(id, getNumDests());
             nodes[i] = node;
+            origins[i] = (Zone)node;
             keynodes.put(id, node);
             
             if(id >= firstThruNode)
@@ -468,7 +471,7 @@ public class Network
             double lambda = calcStepSize(iter);
             update(lambda);
             
-            gap = calcAEC();
+            gap = calcGap();
             
             System.out.println(iter+"\t"+String.format("%.4f", lambda)+"\t"+String.format("%.4f", gap));
         }
@@ -583,7 +586,68 @@ public class Network
     
     public void tapas(int max_iter, double min_gap){
         
-        iter = 0;
+        // find initial solution using AON
+        for(Zone r : origins){
+            new Bush(r, this);
+        }
+        
+        // repeat iteratively:
+        for(iter = 1; iter <= max_iter; iter++){
+            // for every origin
+            for(Zone r : origins){
+                // remove all cyclic flows !!!
+                // find tree of least cost routes
+                r.bush.checkPAS();
+                // for every link used by the origin which is not part of the tree
+                    // if there is an existing effective PAS
+                        // make sure the origin is listed as relevant
+                    // else
+                        // construct a new PAS
+                        
+                        
+                    // choose a random subset of active PASs
+                        // shift flow within each chosen PAS
+            }
+            
+            
+            // for every active PAS
+            boolean modified = false;
+            for(int shiftIter = 0; shiftIter <= Params.tapas_equilibrate_iter; shiftIter++){
+                // check if it should be eliminated
+                removePAS();
+                // perform flow shift to equilibrate costs
+                modified = equilibratePAS();
+                // redistribute flows between origins by the proportionality condition
+                
+                // in the case that no flow shifting occurred, do not try to equilibrate more
+                if(!modified){
+                    break;
+                }
+            }
+            
+                
+            double tstt = getTSTT();
+            double sptt = getSPTT();
+            double gap = (tstt - sptt)/tstt;
+            
+            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.4f", gap));
+            
+            if(gap < min_gap){
+                break;
+            }
+            
+            // there's an issue where PAS are labeled as not cost effective because the difference in cost is small, less than 5% of the reduced cost
+            // for low network gaps, this is causing PAS to not flow shift
+            // when the gap is low, increase the flow shift sensitivity
+            if(gap < Params.pas_cost_mu)
+            {
+                Params.pas_cost_mu /= 10;
+            }
+        }
+        
+        // final proportinality iterations:
+            // for every active PAS
+                // redistribute flows between origins by the proportionality condition
     }
 
     public void algorithmB(int max_iter, double min_gap)
@@ -659,6 +723,15 @@ public class Network
         
         
         return (tstt - sptt) / total_demand;
+    }
+    
+    public double calcGap()
+    {
+        double tstt = getTSTT();
+        double sptt = getSPTT();
+        
+        
+        return (tstt - sptt) / tstt;
     }
     
     
@@ -756,6 +829,14 @@ public class Network
         }
     }
     
+    public void removePAS(PAS p){
+        allPAS.remove(p);
+            
+        for(Zone r : p.getRelevantOrigins()){
+            r.bush.removePAS(p);
+        }
+    }
+    
     public void removePAS(){
         List<PAS> removed = new ArrayList<>();
         
@@ -766,11 +847,7 @@ public class Network
         }
         
         for(PAS p : removed){
-            allPAS.remove(p);
-            
-            for(Zone r : p.getRelevantOrigins()){
-                r.bush.removePAS(p);
-            }
+            removePAS(p);
         }
     }
 }
