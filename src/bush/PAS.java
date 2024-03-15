@@ -26,7 +26,6 @@ public class PAS {
     private int lastIterFlowShift;
     
     private Node start;
-    private Link endLink;
     
     public PAS(){
         forwardlinks = new ArrayList<>();
@@ -47,9 +46,6 @@ public class PAS {
     }
     
     
-    public void setEndLink(Link e){
-        endLink = e;
-    }
     
     public void addRelevantOrigin(Zone r){
         relevant.add(r);
@@ -61,11 +57,15 @@ public class PAS {
     }
     
     public Node getEnd(){
-        return endLink.getDest();
+        return forwardlinks.get(0).getDest();
     }
     
-    public Link getEndLink(){
-        return endLink;
+    public Link getEndLinkFwd(){
+        return forwardlinks.get(0);
+    }
+    
+    public Link getEndLinkBwd(){
+        return backwardlinks.get(backwardlinks.size()-1);
     }
     
     public Node getStart(){
@@ -132,7 +132,26 @@ public class PAS {
         
         double costdiff = backwardcost - forwardcost;
         
+        // maybe the forward and backward costs will be reversed sometimes
+        return Math.abs(costdiff) > Params.pas_cost_mu * forwardcost;
+    }
+    
+    public boolean isCostEffective(Link a){
         
+        double forwardcost = getForwardCost();
+        double backwardcost = getBackwardCost();
+        
+        double costdiff = 0;
+        
+        
+        if(a == getEndLinkBwd()){
+            costdiff = backwardcost - forwardcost;
+        }
+        else if(a == getEndLinkFwd()){
+            costdiff = forwardcost - backwardcost;
+        }
+        
+        // maybe the forward and backward costs will be reversed sometimes
         return costdiff > Params.pas_cost_mu * forwardcost;
     }
     
@@ -157,13 +176,24 @@ public class PAS {
     }
     
     public double getCostDifference(){
-        return getBackwardCost() - getForwardCost();
+        return Math.abs(getBackwardCost() - getForwardCost());
     }
     
     public double maxFlowShift(Bush b){
         double max = Double.MAX_VALUE;
             
         for(Link l : backwardlinks){
+            // check flow on link if l in backwards direction
+            max = Math.min(max, b.getFlow(l));
+
+        }
+        return max;
+    }
+    
+    public double maxBackwardFlowShift(Bush b){
+        double max = Double.MAX_VALUE;
+            
+        for(Link l : forwardlinks){
             // check flow on link if l in backwards direction
             max = Math.min(max, b.getFlow(l));
 
@@ -183,20 +213,53 @@ public class PAS {
     
     }
     
+    public Map<Bush, Double> maxBackwardFlowShift(){
+        
+        Map<Bush, Double> maxFlowPerBush = new HashMap<>();
+        
+        for(Zone r : relevant){
+            maxFlowPerBush.put(r.bush, maxBackwardFlowShift(r.bush));
+        }
+        
+        return maxFlowPerBush;
+    
+    }
+    
     public boolean flowShift(){
         
-        if(!isCostEffective()){
+        double forwardcost = getForwardCost();
+        double backwardcost = getBackwardCost();
+        
+        double costdiff = backwardcost - forwardcost;
+        
+        // maybe the forward and backward costs will be reversed sometimes
+        if(Math.abs(costdiff) < Params.pas_cost_mu * forwardcost){
             return false;
         }
         
+        int backwards = (backwardcost > forwardcost ? 1:-1);
+
+        
         double overallMaxShift = 0;
         
-        Map<Bush, Double> maxFlowShift = maxFlowShift();
+        Map<Bush, Double> maxFlowShift;
+        
+        if(backwards > 0){
+            maxFlowShift = maxFlowShift();
+        }
+        else{
+            maxFlowShift = maxBackwardFlowShift();
+        }
         
         for(Bush b : maxFlowShift.keySet()){
             overallMaxShift += maxFlowShift.get(b);
         }
+        
+        if(overallMaxShift < Params.pas_flow_mu){
+            return false;
+        }
 
+        //System.out.println("max shift "+overallMaxShift+" "+backwards+" "+backwardcost+" "+forwardcost);
         
         double bot = 0;
         double top = overallMaxShift;
@@ -204,9 +267,11 @@ public class PAS {
         while(top - bot > 0.01){
             double mid = (top + bot)/2;
             
-            double check = getTT(mid);
+            double check = getTT(mid * backwards);
             
-            if(check < 0){
+            //System.out.println("\t"+bot+" "+top+" "+mid+" "+check);
+            
+            if(check*backwards < 0){
                 bot = mid;
             }
             else{
@@ -218,16 +283,18 @@ public class PAS {
         for(Link l : forwardlinks){
             for(Bush b : maxFlowShift.keySet()){
                 // proportion allocated to bush is bush max shift / total max shift
-                b.addFlow(l, maxFlowShift.get(b) / overallMaxShift * top);
+                b.addFlow(l, maxFlowShift.get(b) / overallMaxShift * top * backwards);
             }
         }
         
         for(Link l : backwardlinks){
             for(Bush b : maxFlowShift.keySet()){
                 // proportion allocated to bush is bush max shift / total max shift
-                b.addFlow(l, -maxFlowShift.get(b) / overallMaxShift * top);
+                b.addFlow(l, -maxFlowShift.get(b) / overallMaxShift * top * backwards);
             }
         }
+        
+        //System.out.println("after shift "+getTT(0));
         
         return true;
     }

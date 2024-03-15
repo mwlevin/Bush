@@ -331,7 +331,7 @@ public class Bush
             return false;
         }
         for(PAS p : relevantPAS.get(a)){
-            if(p.isCostEffective() && p.isFlowEffective()){
+            if(p.isCostEffective(a) && p.isFlowEffective()){
                 return true;
             }
         }
@@ -404,7 +404,6 @@ public class Bush
         while(curr != a);
         
         output.setStart(firstSimilar.getDest());
-        output.setEndLink(a);
         output.addRelevantOrigin(origin);
         
         System.out.println("PAS is "+output);

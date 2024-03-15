@@ -605,8 +605,11 @@ public class Network
                         // construct a new PAS
                         
                         
-                    // choose a random subset of active PASs
-                        // shift flow within each chosen PAS
+                // choose a random subset of active PASs
+                    // shift flow within each chosen PAS
+                for(PAS p : r.bush.getRelevantPAS()){
+                    p.flowShift();
+                }
             }
             
             
@@ -796,7 +799,7 @@ public class Network
             double temp = p.maxFlowShift(b);
             
 
-            if(temp > max && p.isCostEffective()){
+            if(temp > max && p.isCostEffective(ij)){
                 max = temp;
                 best = p;
             }
@@ -810,14 +813,19 @@ public class Network
         p.setLastIterFlowShift(iter);
     }
  
+    public boolean equilibratePAS(PAS p){
+        if(p.flowShift()){
+            p.setLastIterFlowShift(iter);
+            return true;
+        }
+        return false;
+    }
+    
     public boolean equilibratePAS(){
         boolean output = false;
         
         for(PAS p : allPAS){
-            if(p.flowShift()){
-                p.setLastIterFlowShift(iter);
-                output = true;
-            }
+            output = output || equilibratePAS(p);
         }
         
         return output;
@@ -825,7 +833,7 @@ public class Network
     
     public void printPAS(){
         for(PAS p : allPAS){
-            System.out.println(p.getEndLink()+" - "+p+" "+p.getCostDifference()+" "+p.isCostEffective());
+            System.out.println(p.getEndLinkFwd()+" - "+p+" "+p.getCostDifference()+" "+p.isCostEffective());
         }
     }
     

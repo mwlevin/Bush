@@ -25,18 +25,33 @@ public class PASList implements Iterable<PAS>{
     
     
     public void add(PAS p){
-        if(!set.containsKey(p.getEndLink())){
-            set.put(p.getEndLink(), new HashSet<>());
+        // associate it with both the forward and backward end links for searching purposes.
+        if(!set.containsKey(p.getEndLinkFwd())){
+            set.put(p.getEndLinkFwd(), new HashSet<>());
         }
         
-        set.get(p.getEndLink()).add(p);
+        set.get(p.getEndLinkFwd()).add(p);
+        
+        
+        
+        if(!set.containsKey(p.getEndLinkBwd())){
+            set.put(p.getEndLinkBwd(), new HashSet<>());
+        }
+        
+        set.get(p.getEndLinkBwd()).add(p);
     }
     
     public void remove(PAS p){
-        set.get(p.getEndLink()).remove(p);
+        set.get(p.getEndLinkFwd()).remove(p);
         
-        if(set.get(p.getEndLink()).size() == 0){
-            set.remove(p.getEndLink());
+        if(set.get(p.getEndLinkFwd()).size() == 0){
+            set.remove(p.getEndLinkFwd());
+        }
+        
+        set.get(p.getEndLinkBwd()).remove(p);
+        
+        if(set.get(p.getEndLinkBwd()).size() == 0){
+            set.remove(p.getEndLinkBwd());
         }
     }
     
@@ -67,38 +82,50 @@ public class PASList implements Iterable<PAS>{
     {
         private Iterator<PAS> setiterator;
         private Iterator<Link> keyiterator;
+        private PAS next;
+        private Link key;
         
         public PASListIterator(){
             keyiterator = set.keySet().iterator();
+            
+            refreshIterator();
         }
         
         public PAS next(){
+            PAS output = next;
             refreshIterator();
             
-            if(setiterator == null){
-                return null;
-            }
-            else{
-                return setiterator.next();
-            }
+            return output;
         }
         
         public void refreshIterator(){
+            next = null;
             
-            while(setiterator == null || !setiterator.hasNext()){
-                if(keyiterator.hasNext()){
-                    setiterator = set.get(keyiterator.next()).iterator();
+            outer: while(true){
+                while(setiterator != null && setiterator.hasNext()){
+                    next = setiterator.next();
+
+                    if(next.getEndLinkFwd() == key){
+                        break outer;
+                    }
                 }
-                else{
-                    break;
+
+                while(setiterator == null || !setiterator.hasNext()){
+                    if(keyiterator.hasNext()){
+                        key = keyiterator.next();
+                        setiterator = set.get(key).iterator();
+                    }
+                    else{
+                        next = null;
+                        key = null;
+                        break outer;
+                    }
                 }
             }
         }
         
         public boolean hasNext(){
-            refreshIterator();
-            
-            return setiterator != null && setiterator.hasNext();
+            return next != null;
         }
     }
 }

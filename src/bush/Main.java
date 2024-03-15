@@ -23,7 +23,9 @@ public class Main {
 
         test.tapas(4, 0);
         
+
         /*
+        
         Bush bush = new Bush((Zone)test.findNode(1), test);
         
         test.printLinkFlows();
@@ -31,6 +33,7 @@ public class Main {
         bush.checkPAS();
         test.printPAS();
         
+        /*
         test.equilibratePAS();
         test.equilibratePAS();
         
