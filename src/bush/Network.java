@@ -595,7 +595,8 @@ public class Network
         for(iter = 1; iter <= max_iter; iter++){
             // for every origin
             for(Zone r : origins){
-                // remove all cyclic flows !!!
+                // remove all cyclic flows
+                r.bush.removeCycles();
                 // find tree of least cost routes
                 r.bush.checkPAS();
                 // for every link used by the origin which is not part of the tree

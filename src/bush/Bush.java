@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  *
@@ -44,7 +45,7 @@ public class Bush
         
         relevantPAS = new PASList();
         
-        sorted = new ArrayList<>();
+        sorted = new ReversedList<Node>();
         flow = new double[network.getLinks().length];
         contains = new boolean[network.getLinks().length];
         
@@ -55,6 +56,9 @@ public class Bush
     
     
     public double getFlow(Link l){
+        if(l == null){
+            return 0;
+        }
         return flow[l.getIdx()];
     }
     
@@ -64,9 +68,24 @@ public class Bush
         return contains[l.getIdx()];
     }
     
+    public boolean contains(Node n){
+        if(n == origin){
+            return true;
+        }
+        
+        for(Link l : n.getIncoming()){
+            if(contains(l)){
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     
     public void topologicalSort()
     {
+        
         for(Node n : network.nodes)
         {
             n.in_degree = n.getBushIncoming(this).size();
@@ -79,7 +98,7 @@ public class Bush
         origin.visited = true;
         
         
-        sorted.clear();
+        sorted = new ArrayList<>();
         
         int idx = 0;
         
@@ -131,6 +150,8 @@ public class Bush
                 throw new RuntimeException("Not DAG origin "+origin);
             }
         }
+
+        
     }
     
     
@@ -417,6 +438,244 @@ public class Bush
         return relevantPAS;
     }
     
+    public void removeCycles(){
+        
+        double[] newflow = new double[flow.length];
+        
+        double[] storedDem = new double[origin.demand.length];
+        
+        boolean foundDest = false;
+        do{
+            Stack<Node> unvisited = new Stack<>();
+            
+            foundDest = false;
+            
+            for(Node n : network.nodes){
+                n.visited = false;
+                n.pred = null;
+            }
+            
+            unvisited.add(origin);
+            
+            while(!unvisited.isEmpty()){
+                Node i = unvisited.pop();
+                
+                if((i instanceof Dest)){
+                    // load demand onto new flow graph
+                    
+                    
+                    double max = origin.demand[i.getIdx()] - storedDem[i.getIdx()];
+
+                    if(max > 0){
+                        List<Link> simplePath = new ArrayList<Link>();
+                        Node curr = i;
+                        
+                        while(curr != origin){
+    
+                            max = Math.min(max, getFlow(curr.pred));
+                            simplePath.add(curr.pred);
+                            curr = curr.pred.getSource();
+                        }
+                        
+                        
+                        // now transfer flow
+                        for(Link l : simplePath){
+                            newflow[l.getIdx()] += max;
+                            addFlow(l, -max);
+                        }
+                        storedDem[i.getIdx()] += max;
+                        foundDest = true;
+                    }
+                    
+                    
+                }
+                
+                if(!i.visited){
+                    
+                    i.visited = true;
+
+                    for(Link ij : i.getOutgoing()){
+                        if(contains(ij)){
+                            Node j = ij.getDest();
+                            if(j.pred == null){
+                                j.pred = ij;
+                                unvisited.push(j);
+                            }
+                            
+                        }
+                    }
+                }
+            }
+            
+
+        }
+        while(foundDest);
+        
+        setFlow(newflow);
+        
+        
+        topologicalSort();
+    }
+    
+    public void setFlow(double[] newflow){
+        assert(newflow.length == flow.length);
+        
+        
+        
+        
+        
+        for(Link l : network.links){
+            int i = l.getIdx();
+            l.x.addX(newflow[i] - flow[i]);
+            contains[i] = newflow[i] > Params.bush_gap;
+        }
+        
+        flow = newflow;
+    }
+    /*
+    public void removeCycles(){
+        
+        // right now this restarts the entire loop when a cycle is detected. I think we don't need to restart everything...
+        outer:while(true){
+            for(Node n : network.nodes){
+                n.visited = false;
+                n.pred = null;
+                n.top_order = -1;
+            }
+            
+            sorted.clear();
+            
+            int idx = network.nodes.length-1;
+            
+            Stack unvisited = new Stack();
+            unvisited.add(origin);
+
+
+            while(!unvisited.isEmpty()){
+                Object o = unvisited.pop();
+                
+                if(o instanceof Node){
+                    Node n = (Node)o;
+
+                    if(n.top_order >= 0){
+                        continue;
+                    }
+                    else if(n.visited){
+                        // remove the cycle
+                        System.out.println("unvisited = "+unvisited);
+                        
+                        removeCycle(n);
+                        
+
+                        //continue outer;
+                    }
+                    else{
+                        n.visited = true;
+
+                        unvisited.push(new NodeReturn(n));
+
+                        for(Link l : n.getOutgoing()){
+                            if(contains(l)){
+                                Node j = l.getDest();
+                                j.pred = l;
+                                unvisited.add(j);
+                            }
+                        }
+                    }
+                }
+                else{
+                    Node n = ((NodeReturn)o).node;
+                    if(n.top_order < 0){
+                        sorted.add(n);
+                        n.top_order = idx--;
+                    }
+                }
+            }
+            
+            break outer;
+        }
+        
+        for(Node n : network.nodes){
+            System.out.println(n+" "+n.pred);
+        }
+        System.out.println(sorted);
+
+    }
+    */
+    class NodeReturn{
+        public Node node;
+        
+        public NodeReturn(Node n){
+            node = n;
+        }
+        
+        public String toString(){
+            return "sort "+node;
+        }
+    }
+    
+    // n is the root node of the cycle
+    private void removeCycle(Node n){
+        
+        
+        System.out.println("Remove cycle "+n);
+        for(Node i : network.nodes){
+            System.out.println(i+" "+i.visited+" "+i.pred +" "+getFlow(i.pred));
+        }
+        
+        
+        List<Link> list = new ArrayList<>();
+        
+        Node curr = n;
+        
+        
+        do{
+            //System.out.println("\t"+curr+" "+curr.pred);
+            Link pred = curr.pred;
+            list.add(pred);
+            
+            curr = pred.getSource();
+            
+            
+        }
+        while(curr != n);
+        
+        n.pred = null;
+        
+        double maxflow = Double.MAX_VALUE;
+        
+        for(Link l : list){
+            maxflow = Math.min(maxflow, getFlow(l));
+        }
+        
+        for(Link l : list){
+            // if link is no longer included in bush after removing flow, we need to recheck the visited indices for the destination node
+            if(!addFlow(l, -maxflow)){
+                // ok to do it within this loop because each node only has at most 1 incoming link in the cycle
+                Node j = l.getDest();
+                
+                System.out.println("Check connectivity for "+j);
+                
+                boolean contains = false;
+                for(Link ij : j.getIncoming()){
+                    System.out.println("\t"+ij+" "+getFlow(ij)+" "+contains(ij)+" "+ij.getSource().visited);
+                    if(contains(ij) && ij.getSource().visited){
+                        j.pred = ij;
+                        System.out.println("New pred is "+ij);
+                        contains = true;
+                        break;
+                    }
+                }
+                /*
+                j.visited = contains;
+                if(!contains){
+                    j.pred = null;
+                }*/
+            }
+        }
+        
+        
+    }
     
     
     public Tree maxUsedPath()
@@ -540,10 +799,7 @@ public class Bush
         return max_moved;
     }
     
-    public void removeCyclicFlows(){
-        
-    }
-    
+
     public double swapFlows()
     {
 
@@ -856,7 +1112,7 @@ public class Bush
         return true;
     }
     
-    public void addFlow(Link l, double x)
+    public boolean addFlow(Link l, double x)
     {
 
         if((""+x).equals("NaN"))
@@ -867,6 +1123,8 @@ public class Bush
         flow[l.getIdx()] += x;
         
         contains[l.getIdx()] = flow[l.getIdx()] > Params.bush_gap;
+        
+        return contains[l.getIdx()];
     }
     
     // maybe store this as a map<Link, list<PAS>> mapping end link of PAS
