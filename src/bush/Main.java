@@ -21,9 +21,10 @@ public class Main {
         
         Network test = new Network("grid3");
         
+        // warning! if you create a bush you load demand twice!!!
+        //Bush bush = new Bush((Zone)test.findNode(1), test);
         
-        Bush bush = new Bush((Zone)test.findNode(1), test);
-        
+        /*
         bush.addFlow(test.findLink(34), 10);
         bush.addFlow(test.findLink(45), 10);
         bush.addFlow(test.findLink(56), 10);
@@ -34,42 +35,54 @@ public class Main {
         bush.addFlow(test.findLink(36), 10);
         bush.addFlow(test.findLink(67), 10);
         bush.addFlow(test.findLink(71), 10);
+        */
+
+        //bush.removeCycles();
+        test.printLinkFlows();
+        test.tapas(5, 0);
         
 
-        bush.removeCycles();
-        test.printLinkFlows();
-        //test.tapas(4, 0);
-        
-
-        /*
-        
-        Bush bush = new Bush((Zone)test.findNode(1), test);
         
         test.printLinkFlows();
-        
-        bush.checkPAS();
-        test.printPAS();
         
         /*
-        test.equilibratePAS();
-        test.equilibratePAS();
-        
-        test.printLinkFlows();
-        
-        System.out.println(test.getTSTT()+" "+test.getSPTT());
-        
         bush.checkPAS();
         test.printPAS();
         
         
         System.out.println("Equilibrated? "+test.equilibratePAS());
+        //System.out.println("Equilibrated? "+test.equilibratePAS());
+        //System.out.println("Equilibrated? "+test.equilibratePAS());
+
+        
+        test.printLinkFlows();
+        System.out.println("Flow conservation "+bush.validateFlowConservation());
+        
+        System.out.println(test.getTSTT()+" "+test.getSPTT());
+        
+        for(PAS p : bush.getRelevantPAS()){
+            System.out.println(p+" "+p.getTT(0));
+        }
+        */
+        /*
+        bush.checkPAS();
+        test.printPAS();
+        
+        
         System.out.println("Equilibrated? "+test.equilibratePAS());
         System.out.println("Equilibrated? "+test.equilibratePAS());
+        System.out.println("Equilibrated? "+test.equilibratePAS());
+
         
         
         
         test.printLinkFlows();
         System.out.println(test.getTSTT()+" "+test.getSPTT());
+        
+        
+        for(PAS p : bush.getRelevantPAS()){
+            System.out.println(p+" "+p.getTT(0));
+        }
         
         
         Params.pas_cost_mu = 0.00001;
@@ -86,8 +99,12 @@ public class Main {
         test.printLinkFlows();
         
         System.out.println(test.getTSTT()+" "+test.getSPTT());
-        */
         
+        
+        for(PAS p : bush.getRelevantPAS()){
+            System.out.println(p+" "+p.getTT(0));
+        }
+        */
         
         /*
         PAS p52 = bush.getRelevantPAS().get(test.findLink(52)).iterator().next();
@@ -96,12 +113,16 @@ public class Main {
         System.out.println(p52);
         
         p52.flowShift();
+        System.out.println("p52 tt "+p52.getTT(0));
+        System.out.println("p45 tt "+p45.getTT(0));
         
         test.printLinkFlows();
         
         System.out.println(test.getTSTT()+" "+test.getSPTT());
         
         p45.flowShift();
+        System.out.println("p52 tt "+p52.getTT(0));
+        System.out.println("p45 tt "+p45.getTT(0));
         
         test.printLinkFlows();
         

@@ -12,6 +12,7 @@ package bush;
 public class Zone extends Node implements Dest
 {
     protected double[] demand; // indexed to zones
+    private double totaldemand;
     
     protected Bush bush;
     
@@ -19,6 +20,7 @@ public class Zone extends Node implements Dest
     {
         super(id);
         demand = new double[numDests];
+        totaldemand = 0;
     }
     
     public double[] copyDemand(){
@@ -36,9 +38,15 @@ public class Zone extends Node implements Dest
         return demand[s.getDestIdx()];
     }
     
+    public double getTotalDemand(){
+        return totaldemand;
+    }
+    
     public void setDemand(Dest s, double d)
     {
-        demand[s.getDestIdx()] = d;
+        int i = s.getDestIdx();
+        totaldemand += d - demand[i];
+        demand[i] = d;
     }
     
     public int getDestIdx()

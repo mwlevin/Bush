@@ -597,6 +597,7 @@ public class Network
             for(Zone r : origins){
                 // remove all cyclic flows
                 r.bush.removeCycles();
+               
                 // find tree of least cost routes
                 r.bush.checkPAS();
                 // for every link used by the origin which is not part of the tree
@@ -608,13 +609,16 @@ public class Network
                         
                 // choose a random subset of active PASs
                     // shift flow within each chosen PAS
+                
                 for(PAS p : r.bush.getRelevantPAS()){
                     p.flowShift();
                 }
+                
             }
             
             
             // for every active PAS
+            
             boolean modified = false;
             for(int shiftIter = 0; shiftIter <= Params.tapas_equilibrate_iter; shiftIter++){
                 // check if it should be eliminated
@@ -634,8 +638,9 @@ public class Network
             double sptt = getSPTT();
             double gap = (tstt - sptt)/tstt;
             
-            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.4f", gap));
+            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap));
             
+
             if(gap < min_gap){
                 break;
             }

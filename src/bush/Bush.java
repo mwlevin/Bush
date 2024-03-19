@@ -151,10 +151,37 @@ public class Bush
             }
         }
 
-        
+
     }
     
-    
+    public boolean validateFlowConservation(){
+
+        for(Node n : network.nodes){
+            double inflow = 0;
+            double outflow = 0;
+            
+            for(Link l : n.getIncoming()){
+                inflow += getFlow(l);
+            }
+            
+            for(Link l : n.getOutgoing()){
+                outflow += getFlow(l);
+            }
+            
+            if(n == origin){
+                inflow += origin.getTotalDemand();
+            }
+            else if(n instanceof Zone){
+                outflow += origin.getDemand((Zone)n);
+            }
+            
+            if(Math.abs(inflow-outflow) > Params.bush_gap){
+                return false;
+            }
+        }
+        
+        return true;
+    }
     
     public boolean testTopologicalSort()
     {
@@ -1081,6 +1108,8 @@ public class Bush
                 curr = uv.getSource();
             }
         }
+        
+        topologicalSort();
     }
     
     
