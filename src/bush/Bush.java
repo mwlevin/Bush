@@ -45,7 +45,7 @@ public class Bush
         
         relevantPAS = new PASList();
         
-        sorted = new ReversedList<Node>();
+        sorted = new ArrayList<Node>();
         flow = new double[network.getLinks().length];
         contains = new boolean[network.getLinks().length];
         
@@ -98,7 +98,7 @@ public class Bush
         origin.visited = true;
         
         
-        sorted = new ArrayList<>();
+
         
         int idx = 0;
         
