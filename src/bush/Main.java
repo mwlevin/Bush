@@ -21,8 +21,8 @@ public class Main {
         
         Network test = new Network("grid3");
         
-        // warning! if you create a bush you load demand twice!!!
-        //Bush bush = new Bush((Zone)test.findNode(1), test);
+        test.createBushAON();
+        Bush bush = new Bush((Zone)test.findNode(1), test);
         
         /*
         bush.addFlow(test.findLink(34), 10);

@@ -457,6 +457,7 @@ public class Network
 
     public void frankWolfe(int max_iter, double min_gap)
     {
+        reset();
         
         double gap = Params.INFTY;
         iter = 0;
@@ -584,12 +585,27 @@ public class Network
     }
     
     
-    public void tapas(int max_iter, double min_gap){
-        
-        // find initial solution using AON
+    public void createBushAON(){
         for(Zone r : origins){
             new Bush(r, this);
         }
+    }
+    
+    public void reset(){
+        for(Zone r : origins){
+            r.bush = null;
+        }
+        
+        for(Link l : links){
+            l.x.setX(0);
+        }
+    }
+    
+    public void tapas(int max_iter, double min_gap){
+        
+        // find initial solution using AON
+        reset();
+        createBushAON();
         
         // repeat iteratively:
         for(iter = 1; iter <= max_iter; iter++){
@@ -662,12 +678,8 @@ public class Network
     public void algorithmB(int max_iter, double min_gap)
     {
         // initial feasible bush
-        for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
-        {
-            Zone r = (Zone)nodes[idr];
-            r.bush = new Bush(r, this);
-
-        }
+        reset();
+        createBushAON();
         
         double gap = Params.INFTY;
         
