@@ -459,6 +459,8 @@ public class Network
     {
         reset();
         
+        long time = System.nanoTime();
+        
         double gap = Params.INFTY;
         iter = 0;
         
@@ -478,6 +480,7 @@ public class Network
         }
         while((gap > min_gap || iter == 1) && iter < max_iter);
 
+        System.out.println("TIME: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9));
     }
     
     public double calcSearchDirection()
@@ -605,6 +608,10 @@ public class Network
         
         // find initial solution using AON
         reset();
+        
+        
+        long time = System.nanoTime();
+        
         createBushAON();
         
         // repeat iteratively:
@@ -678,12 +685,17 @@ public class Network
         // final proportinality iterations:
             // for every active PAS
                 // redistribute flows between origins by the proportionality condition
+                
+        System.out.println("TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9));
     }
 
     public void algorithmB(int max_iter, double min_gap)
     {
         // initial feasible bush
         reset();
+        
+        long time = System.nanoTime();
+        
         createBushAON();
         
         double gap = Params.INFTY;
@@ -708,6 +720,7 @@ public class Network
         }
         while(gap > min_gap && iter < max_iter);
 
+        System.out.println("TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9));
     }
 
     public double getTSTT(){
