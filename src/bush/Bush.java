@@ -594,7 +594,7 @@ public class Bush
         
         for(Branch b : branches){
             b.init();
-            System.out.println(b);
+            //System.out.println(b);
             b.flowShift();
             
             

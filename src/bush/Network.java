@@ -658,7 +658,7 @@ public class Network
             
             System.out.println("ITERATION "+iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap));
             
-            printLinkFlows();
+            //printLinkFlows();
             
             if(gap < min_gap){
                 break;
@@ -670,6 +670,8 @@ public class Network
             if(gap < Params.pas_cost_mu)
             {
                 Params.pas_cost_mu /= 10;
+                Params.line_search_gap /= 10;
+                System.out.println("Adjusting parameters due to small gap");
             }
         }
         
