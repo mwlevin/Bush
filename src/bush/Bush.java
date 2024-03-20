@@ -169,10 +169,14 @@ public class Bush
             
             for(Link l : n.getIncoming()){
                 inflow += getFlow(l);
+                
+                //System.out.println("check "+l+" "+getFlow(l)+" "+l.getFlow());
             }
             
             for(Link l : n.getOutgoing()){
                 outflow += getFlow(l);
+                
+                //System.out.println("check "+l+" "+getFlow(l)+" "+l.getFlow());
             }
             
             if(n == origin){
@@ -181,6 +185,8 @@ public class Bush
             else if(n instanceof Zone){
                 outflow += origin.getDemand((Zone)n);
             }
+            
+            //System.out.println(n+" "+inflow+" "+outflow);
             
             if(Math.abs(inflow-outflow) > Params.flow_epsilon){
                 return false;
@@ -584,10 +590,22 @@ public class Bush
     }
     
     public void branchShifts(){
+        
+        
         for(Branch b : branches){
             b.init();
-            //System.out.println(b);
+            System.out.println(b);
             b.flowShift();
+            
+            
+            /*
+            boolean output = validateFlowConservation();
+            if(!output){
+                System.out.println("\n\n\n****flow conservation failed*****\n\n");
+                System.exit(0);
+                return;
+            }
+            */
         }
         
         branches.clear();
@@ -609,9 +627,6 @@ public class Bush
     public void removePAS(PAS p){
         relevantPAS.remove(p);
     }
-    
-    
-    
     
     
     // create a PAS for link a

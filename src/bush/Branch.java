@@ -37,6 +37,8 @@ public class Branch {
     
     public void init(){
         
+        //bush.network.printLinkFlows();
+        
         for(Node n : bush.network.nodes){
             n.visited = false;
         }
@@ -146,7 +148,7 @@ public class Branch {
             Path augmentedPath = bush.tracePath2(start, end);
             
             
-            double sendFlow = maxflow;
+            double sendFlow = maxflow - assignedFlow;
             
             for(Link l : augmentedPath){
                 sendFlow = Math.min(sendFlow, bush.getFlow(l) - linkflows.get(l));
@@ -166,7 +168,7 @@ public class Branch {
 
     
     public String toString(){
-        return linkflows.toString()+" ; "+minpath;
+        return endlink+" : "+linkflows.toString()+" ; "+minpath;
     }
     
 
@@ -175,6 +177,9 @@ public class Branch {
 
     
     public double flowShift(){
+        
+        
+        
         
         double avgTT = getAvgTT(0);
         double minTT = getMinTT(0);

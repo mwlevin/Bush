@@ -656,7 +656,7 @@ public class Network
             double sptt = getSPTT();
             double gap = (tstt - sptt)/tstt;
             
-            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap));
+            System.out.println("ITERATION "+iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap));
             
             printLinkFlows();
             
