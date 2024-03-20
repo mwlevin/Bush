@@ -57,7 +57,7 @@ public class Path extends ArrayList<Link>
     {
         for(Link l : this)
         {
-            l.x.addX(y);
+            l.addX(y);
         }
     }
     
@@ -97,7 +97,7 @@ public class Path extends ArrayList<Link>
                 output += get(i).getSource()+", ";
             }
             
-            output += get(size()-1).getDest()+"]";
+            output += get(0).getDest()+"]";
         }
         
         return output;

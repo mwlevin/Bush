@@ -19,7 +19,8 @@ public class Link
     private int id;
     
 
-    public Flow x;
+    private double x;
+    public double x_star;
 
     
     private double fftime, capacity, alpha, beta, length;
@@ -42,10 +43,16 @@ public class Link
         this.beta = beta;
         this.length = length;
         
-        x = new Flow();
+        x = 0;
     }
     
-
+    public boolean hasHighReducedCost(double percent){
+        double reducedCost = dest.cost - source.cost;
+        double tt = getTT();
+        
+        return tt - reducedCost > tt*percent;
+    }
+    
     public int getIdx()
     {
         return idx;
@@ -57,7 +64,7 @@ public class Link
     }
     
     public double getFlow(){
-        return x.getX();
+        return x;
     }
     
     
@@ -83,7 +90,7 @@ public class Link
     
     public double getTT()
     {
-        return getTT(x.getX());
+        return getTT(x);
     }
     
     public double getDeriv_TT(double x)
@@ -126,7 +133,7 @@ public class Link
     
     public double getDeriv_TT()
     {
-        return getDeriv_TT(x.getX());
+        return getDeriv_TT(x);
     }
     
     public double getInt_TT(double x)
@@ -167,5 +174,27 @@ public class Link
             x = 0;
         }
         return fftime * (1 + alpha * Math.pow(x / capacity, beta));
+    }
+    
+    public void update(double stepsize)
+    {
+        x = getXPrime(stepsize);
+    }
+    
+    public double getXPrime(double stepsize)
+    {
+        return x * (1 - stepsize) + x_star * stepsize;
+    }
+    
+    public void addX(double delta)
+    {
+        if(x + delta < -Params.flow_epsilon){
+            throw new RuntimeException("Negative flow on link - "+(x+delta));
+        }
+        x += delta;
+    }
+    
+    public void setFlow(double x){
+        this.x = x;
     }
 }

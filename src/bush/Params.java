@@ -13,8 +13,12 @@ public class Params
 {
     public static double bush_gap = 0.0001;
     public static double pas_cost_mu = 0.05;
-    public static double pas_flow_mu = 0.025;
-    public static double flow_epsilon = 0.01;
+    public static double pas_flow_mu = 15; //0.025;
+    public static double flow_epsilon = 0.0001;
+    public static double line_search_gap = 0.1;
+    
+    
+    public static final boolean DEBUG_CHECKS = true;
     
     
     public static double tapas_equilibrate_iter = 3;

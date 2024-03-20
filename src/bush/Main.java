@@ -21,14 +21,38 @@ public class Main {
         
         Network test = new Network("grid3");
         
-        test.createBushAON();
+        
         Bush bush = new Bush((Zone)test.findNode(1), test);
         
+        
+ 
+        
+        
         /*
+        //bush.addFlow(test.findLink(13), -50);
+        bush.addFlow(test.findLink(34), -50);
+        bush.addFlow(test.findLink(45), -50);
+        bush.addFlow(test.findLink(52), -20);
+        
+        bush.addFlow(test.findLink(65), 30);
+        bush.addFlow(test.findLink(36), 50);
+        bush.addFlow(test.findLink(69), 20);
+        bush.addFlow(test.findLink(92), 20);
+        
+        test.printLinkFlows();
+        test.getSPTree(bush.getOrigin());
+        bush.checkPAS();
+        bush.branchShifts();
+        
+        
+        */
+        
+        
+        /*
+        bush.addFlow(test.findLink(13), 10);
         bush.addFlow(test.findLink(34), 10);
         bush.addFlow(test.findLink(45), 10);
-        bush.addFlow(test.findLink(56), 10);
-        bush.addFlow(test.findLink(63), 10);
+        bush.addFlow(test.findLink(52), 10);
         
         
         bush.addFlow(test.findLink(13), 10);
@@ -38,12 +62,13 @@ public class Main {
         */
 
         //bush.removeCycles();
-        test.printLinkFlows();
+        //test.printLinkFlows();
         test.tapas(5, 0);
         
+        System.out.println("flow conservation "+bush.validateFlowConservation());
 
         
-        test.printLinkFlows();
+        //test.printLinkFlows();
         
         /*
         bush.checkPAS();

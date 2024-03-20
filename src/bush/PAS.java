@@ -264,7 +264,7 @@ public class PAS {
         double bot = 0;
         double top = overallMaxShift;
         
-        while(top - bot > 0.01){
+        while(top - bot > Params.line_search_gap){
             double mid = (top + bot)/2;
             
             double check = getTT(mid * backwards);
@@ -283,14 +283,14 @@ public class PAS {
         for(Link l : forwardlinks){
             for(Bush b : maxFlowShift.keySet()){
                 // proportion allocated to bush is bush max shift / total max shift
-                b.addFlow(l, maxFlowShift.get(b) / overallMaxShift * top * backwards);
+                b.addFlow(l, maxFlowShift.get(b) / overallMaxShift * bot * backwards);
             }
         }
         
         for(Link l : backwardlinks){
             for(Bush b : maxFlowShift.keySet()){
                 // proportion allocated to bush is bush max shift / total max shift
-                b.addFlow(l, -maxFlowShift.get(b) / overallMaxShift * top * backwards);
+                b.addFlow(l, -maxFlowShift.get(b) / overallMaxShift * bot * backwards);
             }
         }
         

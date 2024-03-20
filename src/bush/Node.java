@@ -30,7 +30,8 @@ public class Node implements Comparable<Node>
     public int in_degree;
     
     public double cost;
-    public Link pred;
+    // pred2 is used by bush when not finding shortest paths
+    public Link pred, pred2;
     
     
     public boolean temp_mark;

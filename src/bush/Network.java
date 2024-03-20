@@ -120,7 +120,7 @@ public class Network
     
     public void printLinkFlows(){
         for(Link l : links){
-            System.out.println(l.getSource()+"\t"+l.getDest()+"\t"+l.x.getX()+"\t"+l.getTT());
+            System.out.println(l.getSource()+"\t"+l.getDest()+"\t"+String.format("%.1f", l.getFlow())+"\t"+String.format("%.2f", l.getTT()));
         }
     }
     
@@ -487,8 +487,8 @@ public class Network
         
         for(Link l : links)
         {
-            tstt += l.x.getX() * l.getTT();
-            l.x.x_star = 0;
+            tstt += l.getFlow() * l.getTT();
+            l.x_star = 0;
         }
         
         for(int idr = getFirstOrigin(); idr <= getLastOrigin(); idr++)
@@ -507,7 +507,7 @@ public class Network
                 
                 for(Link l : tree.trace(s))
                 {
-                    l.x.x_star += d;
+                    l.x_star += d;
                 }
             }
         }
@@ -519,7 +519,7 @@ public class Network
     {
         for(Link l : links)
         {
-            l.x.update(lambda);
+            l.update(lambda);
         }
     }
     
@@ -566,7 +566,7 @@ public class Network
         
         for(Link ij : links)
         {
-            output += ij.getTT(ij.x.getXPrime(lambda)) * (ij.x.x_star - ij.x.getX());
+            output += ij.getTT(ij.getXPrime(lambda)) * (ij.x_star - ij.getFlow());
         }
         
         return output;
@@ -578,7 +578,7 @@ public class Network
         
         for(Link ij : links)
         {
-            output += ij.getInt_TT(ij.x.getXPrime(lambda));
+            output += ij.getInt_TT(ij.getXPrime(lambda));
         }
         
         return output;
@@ -597,7 +597,7 @@ public class Network
         }
         
         for(Link l : links){
-            l.x.setX(0);
+            l.setFlow(0);
         }
     }
     
@@ -625,6 +625,8 @@ public class Network
                         
                 // choose a random subset of active PASs
                     // shift flow within each chosen PAS
+                    
+                r.bush.branchShifts();
                 
                 for(PAS p : r.bush.getRelevantPAS()){
                     p.flowShift();
@@ -656,7 +658,8 @@ public class Network
             
             System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap));
             
-
+            printLinkFlows();
+            
             if(gap < min_gap){
                 break;
             }
@@ -709,11 +712,11 @@ public class Network
         double tstt = 0;
         for(Link l : links)
         {
-            tstt += l.x.getX() * l.getTT();
+            tstt += l.getFlow() * l.getTT();
             
             if((""+tstt).equals("NaN"))
             {
-                System.out.println(l.x.getX()+"\t"+l.getTT()+"\t"+tstt+"\t"+(""+l.getTT()).equals("NaN"));
+                System.out.println(l.getFlow()+"\t"+l.getTT()+"\t"+tstt+"\t"+(""+l.getTT()).equals("NaN"));
                 System.exit(0);
             }
         }

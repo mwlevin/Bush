@@ -8,6 +8,7 @@ package bush;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,11 +30,13 @@ public class Bush
     private double[] flow; // use the indices of each link
     private boolean[] contains; 
     
-    private Network network;
+    protected Network network;
     
     private PASList relevantPAS;
     
     private ArrayList<Node> sorted;
+    
+    private ArrayList<Branch> branches;
     
     public Bush(Zone origin, Network network)
     {
@@ -44,6 +47,7 @@ public class Bush
         origin.bush = this;
         
         relevantPAS = new PASList();
+        branches = new ArrayList<>();
         
         sorted = new ArrayList<Node>();
         flow = new double[network.getLinks().length];
@@ -53,7 +57,9 @@ public class Bush
     }
     
     
-    
+    public Zone getOrigin(){
+        return origin;
+    }
     
     public double getFlow(Link l){
         if(l == null){
@@ -81,6 +87,7 @@ public class Bush
         
         return false;
     }
+    
     
     
     public void topologicalSort()
@@ -175,7 +182,7 @@ public class Bush
                 outflow += origin.getDemand((Zone)n);
             }
             
-            if(Math.abs(inflow-outflow) > Params.bush_gap){
+            if(Math.abs(inflow-outflow) > Params.flow_epsilon){
                 return false;
             }
         }
@@ -227,7 +234,7 @@ public class Bush
         boolean output = true;
         for(Link l : network.links)
         {
-            if(flow[l.getIdx()] > Params.bush_gap && l.getReducedCost() <- Params.bush_gap)
+            if(flow[l.getIdx()] > Params.flow_epsilon && l.getReducedCost() <- Params.bush_gap)
             {
                 if(print)
                 {
@@ -303,6 +310,199 @@ public class Bush
         return output;
     }
     
+    
+    public Branch createBranch(Link endlink){
+        
+        
+        
+        
+        Set<Link> minpath = tracePathSet(origin, endlink.getDest());
+        
+        Branch output = new Branch(this, endlink, minpath);
+        
+        return output;
+    }
+    
+    /*
+        Stack<Node> unvisited = new Stack<>();
+        
+        Set<Link> branchlinks = new HashSet<>();
+        
+        unvisited.add(endlink.getSource());
+        
+        while(!unvisited.isEmpty()){
+            Node j = unvisited.pop();
+            
+            for(Link ij : j.getIncoming()){
+ 
+                if(contains(ij)){
+                    Node i = ij.getSource();
+                    
+                    branchlinks.add(ij);
+                    
+                    
+                    if(!i.visited){
+                        unvisited.push(i);
+                        i.visited = true;
+                    }
+                }
+            }
+        }
+
+
+        double maxflow = getFlow(endlink);
+        // now do Ford-Fulkerson to figure out branch flow on each link
+        // the "capacities" are the bush flow on each link
+        // due to conservation of flow I don't need to add flow in reverse. DFS will be sufficient.
+        Map<Link, Double> branchflows = new HashMap<>();
+        
+        for(Link l : branchlinks){
+            branchflows.put(l, 0.0);
+        }
+        
+        Node start = origin;
+        Node end = endlink.getSource();
+        branchflows.put(endlink, maxflow);
+        
+        
+        
+        double assignedFlow = 0;
+        
+        // while there is flow left to assign
+        // use flow epsilon to avoid numerical error causing infinite loop
+        while(maxflow - assignedFlow > Params.flow_epsilon){
+            
+            // DFS find path
+            unvisited.clear();
+            unvisited.push(start);
+            
+            for(Node n : network.nodes){
+                n.visited = false;
+                n.pred2 = null;
+            }
+            
+            start.visited = true;
+            
+            while(!unvisited.isEmpty()){
+                Node i = unvisited.pop();
+                
+
+                // once DFS finds a path, stop and add flow. That path will become unusable
+                if(i == end){
+                    break;
+                }
+                
+                ArrayList<Link> expanded = new ArrayList<>();
+                for(Link ij : i.getOutgoing()){
+                    // only expand links with positive bush flow - temporary branch flow
+                    if(branchlinks.contains(ij) && !ij.getDest().visited && getFlow(ij) - branchflows.get(ij) > Params.flow_epsilon){
+                        expanded.add(ij);
+                    }
+                }
+                
+                // sort in order of decreasing flow
+                Collections.sort(expanded, new Comparator<Link>(){
+                    public int compare(Link i, Link j){
+                        double flowi = getFlow(i) - branchflows.get(i);
+                        double flowj = getFlow(j) - branchflows.get(j);
+                        return (int)Math.ceil(flowj - flowi);
+                    }
+                });
+                
+                for(Link ij : expanded){
+                    Node j = ij.getDest();
+                    j.pred2 = ij;
+                    j.visited = true;
+                    unvisited.push(j);
+                }
+            }
+            
+            // trace path and label flows
+            Path augmentedPath = tracePath2(start, end);
+            
+            
+            double sendFlow = maxflow;
+            
+            for(Link l : augmentedPath){
+                sendFlow = Math.min(sendFlow, getFlow(l) - branchflows.get(l));
+            }
+            
+            for(Link l : augmentedPath){
+                branchflows.put(l, branchflows.get(l) + sendFlow);
+            }
+            
+       
+            assignedFlow += sendFlow;
+        }
+
+        
+        // max flow shifted off branch is the flow on the last link
+        
+
+        
+        
+        
+        
+        
+        
+        return output;
+    }
+    
+    */
+    
+    public Path tracePath(Node j){
+        return tracePath(origin, j);
+    }
+    
+    public Path tracePath(Node i, Node j){
+        
+
+        Path output = new Path(true);
+        
+        Node curr = j;
+        
+        while(curr != i){
+
+            output.add(curr.pred);
+            curr = curr.pred.getSource();
+        }
+        
+        return output;
+    }
+    
+    public Path tracePath2(Node i, Node j){
+        
+
+        Path output = new Path(true);
+        
+        Node curr = j;
+        
+        while(curr != i){
+
+            output.add(curr.pred2);
+            curr = curr.pred2.getSource();
+        }
+        
+        return output;
+    }
+    
+    
+    public Set<Link> tracePathSet(Node i, Node j){
+        
+
+        Set<Link> output = new HashSet<>();
+        
+        Node curr = j;
+        
+        while(curr != i){
+
+            output.add(curr.pred);
+            curr = curr.pred.getSource();
+        }
+        
+        return output;
+    }
+    
     public Tree minPath()
     {
         for(Node u : network.nodes)
@@ -351,10 +551,12 @@ public class Bush
         Tree minPathTree = network.getSPTree(origin);
         
         
-        
         // look for all used links not part of the tree of least cost routes
         for(Link l : network.links){
-            if(getFlow(l) > 0 && !minPathTree.containsLink(l)){
+            // check for links with high reduced cost and positive flow, not just links not on the shortest path
+            if(getFlow(l) > 0 && l.hasHighReducedCost(Params.pas_cost_mu)){
+                
+                //System.out.println(l+" "+l.getDest().cost+" "+l.getSource().cost+" "+(l.getDest().cost-l.getSource().cost)+" "+l.getTT());
                 // we need a PAS!
                 if(!hasRelevantPAS(l)){
                     
@@ -362,7 +564,14 @@ public class Bush
                     PAS fromNetwork = network.findPAS(l, this);
                     if(fromNetwork == null){
                         System.out.println("Create PAS for "+l);
-                        createPAS(minPathTree, l);
+                        if(createPAS(minPathTree, l, getFlow(l)*Params.pas_flow_mu) == null){
+                            // branch shift
+                            System.out.println("branch shift!");
+                            Branch branch = createBranch(l);
+                            
+                            branches.add(branch);
+                            
+                        }
                     }
                     else{
                         System.out.println("Take PAS for "+l);
@@ -372,6 +581,16 @@ public class Bush
             }
         }
         
+    }
+    
+    public void branchShifts(){
+        for(Branch b : branches){
+            b.init();
+            //System.out.println(b);
+            b.flowShift();
+        }
+        
+        branches.clear();
     }
     
     public boolean hasRelevantPAS(Link a){
@@ -396,10 +615,9 @@ public class Bush
     
     
     // create a PAS for link a
-    public PAS createPAS(Tree minPathTree, Link a){
-        
-        
-        
+    public PAS createPAS(Tree minPathTree, Link a, double minflow){
+
+
         PAS output = new PAS();
         
         // min path to a.dest
@@ -425,24 +643,29 @@ public class Bush
                 break;
             }
             
-            
-            
             for(Link ij : j.getIncoming()){
-                if(getFlow(ij) > 0){
+                if(getFlow(ij) > minflow){
                     unvisited.add(ij);
                     trace.put(ij, jk);
                 }
             }
         }
         
-        System.out.println("firstSimilar is "+firstSimilar);
+        if(firstSimilar == null){
+            return null;
+        }
+        
+        //System.out.println("firstSimilar is "+firstSimilar);
         
         // trace firstSimilar to a in min path tree: this is the forward side of the PAS
         for(Link l : minPathTree.trace(firstSimilar.getSource(), a.getDest())){
             output.addForwardLink(l);
         }
         
+
+        
         // trace firstSimilar to a in used flow bush: this is the backward side of the PAS
+        // if this loop breaks it's probably because we shifted flow and tried to find a PAS after shifting flow before re-running shortest path
         Link curr = firstSimilar;
         output.addBackwardLink(firstSimilar);
         do{
@@ -479,7 +702,7 @@ public class Bush
             
             for(Node n : network.nodes){
                 n.visited = false;
-                n.pred = null;
+                n.pred2 = null;
             }
             
             unvisited.add(origin);
@@ -499,9 +722,9 @@ public class Bush
                         
                         while(curr != origin){
     
-                            max = Math.min(max, getFlow(curr.pred));
-                            simplePath.add(curr.pred);
-                            curr = curr.pred.getSource();
+                            max = Math.min(max, getFlow(curr.pred2));
+                            simplePath.add(curr.pred2);
+                            curr = curr.pred2.getSource();
                         }
                         
                         
@@ -524,8 +747,8 @@ public class Bush
                     for(Link ij : i.getOutgoing()){
                         if(contains(ij)){
                             Node j = ij.getDest();
-                            if(j.pred == null){
-                                j.pred = ij;
+                            if(j.pred2 == null){
+                                j.pred2 = ij;
                                 unvisited.push(j);
                             }
                             
@@ -553,8 +776,8 @@ public class Bush
         
         for(Link l : network.links){
             int i = l.getIdx();
-            l.x.addX(newflow[i] - flow[i]);
-            contains[i] = newflow[i] > Params.bush_gap;
+            l.addX(newflow[i] - flow[i]);
+            contains[i] = newflow[i] > Params.flow_epsilon;
         }
         
         flow = newflow;
@@ -647,7 +870,7 @@ public class Bush
         
         System.out.println("Remove cycle "+n);
         for(Node i : network.nodes){
-            System.out.println(i+" "+i.visited+" "+i.pred +" "+getFlow(i.pred));
+            System.out.println(i+" "+i.visited+" "+i.pred2 +" "+getFlow(i.pred2));
         }
         
         
@@ -658,7 +881,7 @@ public class Bush
         
         do{
             //System.out.println("\t"+curr+" "+curr.pred);
-            Link pred = curr.pred;
+            Link pred = curr.pred2;
             list.add(pred);
             
             curr = pred.getSource();
@@ -667,7 +890,7 @@ public class Bush
         }
         while(curr != n);
         
-        n.pred = null;
+        n.pred2 = null;
         
         double maxflow = Double.MAX_VALUE;
         
@@ -687,7 +910,7 @@ public class Bush
                 for(Link ij : j.getIncoming()){
                     System.out.println("\t"+ij+" "+getFlow(ij)+" "+contains(ij)+" "+ij.getSource().visited);
                     if(contains(ij) && ij.getSource().visited){
-                        j.pred = ij;
+                        j.pred2 = ij;
                         System.out.println("New pred is "+ij);
                         contains = true;
                         break;
@@ -994,13 +1217,13 @@ public class Bush
         }
         */
 
-        while(max_moved > 0  && difference > Params.bush_gap)
+        while(max_moved > 0  && difference > Params.flow_epsilon)
         {
  
             double deriv = max_path.getDeriv_TT() + min_path.getDeriv_TT();
             
             double y;
-            if(max_moved < Params.bush_gap)
+            if(max_moved < Params.flow_epsilon)
             {
                 y = max_moved;
             }
@@ -1052,7 +1275,7 @@ public class Bush
         {
             Link l = network.links[idx];
             
-            if(flow[idx] < Params.bush_gap && !checkCost(l))
+            if(flow[idx] < Params.flow_epsilon && !checkCost(l))
             {
                 remove.add(l);
             }
@@ -1131,7 +1354,7 @@ public class Bush
                     actual -= flow[dj.getIdx()];
                 }
                 
-                if(Math.abs(d - actual) > Params.bush_gap){
+                if(Math.abs(d - actual) > Params.flow_epsilon){
                     throw new RuntimeException("Origin "+origin+": demand to "+s+" is "+d+" but flow is "+actual);
                     //return false;
                 }
@@ -1148,10 +1371,10 @@ public class Bush
         {
             throw new RuntimeException("flow="+x);
         }
-        l.x.addX(x);
+        l.addX(x);
         flow[l.getIdx()] += x;
         
-        contains[l.getIdx()] = flow[l.getIdx()] > Params.bush_gap;
+        contains[l.getIdx()] = flow[l.getIdx()] > Params.flow_epsilon;
         
         return contains[l.getIdx()];
     }
