@@ -629,6 +629,8 @@ public class Network
         
         createBushAON();
         
+    
+        
         // repeat iteratively:
         for(iter = 1; iter <= max_iter; iter++){
             // for every origin
@@ -645,8 +647,7 @@ public class Network
                     // if there is an existing effective PAS
                         // make sure the origin is listed as relevant
                     // else
-                        // construct a new PAS
-                        
+                        // construct a new PAS    
                         
                 // choose a random subset of active PASs
                     // shift flow within each chosen PAS
@@ -656,9 +657,8 @@ public class Network
                 for(PAS p : r.bush.getRelevantPAS()){
                     p.flowShift();
                 }
-                
+
             }
-            
             
             // for every active PAS
             
@@ -675,7 +675,6 @@ public class Network
                     break;
                 }
             }
-            
                 
             double tstt = getTSTT();
             double sptt = getSPTT();

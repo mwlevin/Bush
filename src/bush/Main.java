@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException
     {
         
-        Network test = new Network("grid3_4od");
+        Network test = new Network("SiouxFalls");
         
         
         //Bush bush = new Bush((Zone)test.findNode(1), test);
@@ -49,20 +49,24 @@ public class Main {
         
         
         /*
-        bush.addFlow(test.findLink(13), 10);
         bush.addFlow(test.findLink(34), 10);
         bush.addFlow(test.findLink(45), 10);
-        bush.addFlow(test.findLink(52), 10);
+        bush.addFlow(test.findLink(56), 10);
+        bush.addFlow(test.findLink(63), 10);
         
         
         bush.addFlow(test.findLink(13), 10);
         bush.addFlow(test.findLink(36), 10);
         bush.addFlow(test.findLink(67), 10);
         bush.addFlow(test.findLink(71), 10);
+        
+        test.printLinkFlows();
+        bush.removeCycles();
+        test.printLinkFlows();
         */
-
-        //bush.removeCycles();
-        //test.printLinkFlows();
+        
+        
+        
         test.tapas(100, 1E-4);
         
         //System.out.println("flow conservation "+bush.validateFlowConservation());
