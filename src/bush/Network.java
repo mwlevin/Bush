@@ -590,7 +590,9 @@ public class Network
     
     public void createBushAON(){
         for(Zone r : origins){
-            new Bush(r, this);
+            if(r.getTotalDemand() > Params.flow_epsilon){
+                new Bush(r, this);
+            }
         }
     }
     
@@ -618,6 +620,9 @@ public class Network
         for(iter = 1; iter <= max_iter; iter++){
             // for every origin
             for(Zone r : origins){
+                if(r.bush == null){
+                    continue;
+                }
                 // remove all cyclic flows
                 r.bush.removeCycles();
                
