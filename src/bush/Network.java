@@ -382,6 +382,11 @@ public class Network
             }
             else
             {
+                boolean semicolon = false;
+                if(next.indexOf(':') >= 0){
+                    next = next.substring(0, next.indexOf(':'));
+                    semicolon = true;
+                }
                 int ids = Integer.parseInt(next);
                 Dest s;
                 
@@ -394,8 +399,10 @@ public class Network
                     s = (Zone)keynodes.get(ids);
                 }
                 
-
-                filein.next(); 
+                if(!semicolon){
+                    filein.next(); 
+                }
+                
                 String temp = filein.next();
                 if(temp.charAt(temp.length()-1)==';')
                 {
@@ -464,7 +471,7 @@ public class Network
         double gap = Params.INFTY;
         iter = 0;
         
-        System.out.println("Iter\tStep size\tAEC");
+        System.out.println("Iter\tStep size\tTSTT\tSPTT\tGap\tAEC");
         
         do
         {
@@ -474,13 +481,17 @@ public class Network
             double lambda = calcStepSize(iter);
             update(lambda);
             
-            gap = calcGap();
+            double tstt = getTSTT();
+            double sptt = getSPTT();
+            gap = (tstt - sptt)/tstt;
+            double aec = (tstt - sptt)/total_demand;
             
-            System.out.println(iter+"\t"+String.format("%.4f", lambda)+"\t"+String.format("%.4f", gap));
+            System.out.println(iter+"\t"+String.format("%.4f", lambda)+"\t"+String.format("%.1f", tstt)+
+                    "\t"+String.format("%.1f", sptt)+"\t"+String.format("%.4f", gap)+"\t"+String.format("%.4f", aec));
         }
         while((gap > min_gap || iter == 1) && iter < max_iter);
 
-        System.out.println("TIME: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9));
+        System.out.println("FW TIME: "+String.format("%.2f", (System.nanoTime() - time)/1.0e9)+"s");
     }
     
     public double calcSearchDirection()
@@ -614,6 +625,8 @@ public class Network
         
         long time = System.nanoTime();
         
+        System.out.println("Iter\tTSTT\tSPTT\tGap\tAEC");
+        
         createBushAON();
         
         // repeat iteratively:
@@ -667,8 +680,9 @@ public class Network
             double tstt = getTSTT();
             double sptt = getSPTT();
             double gap = (tstt - sptt)/tstt;
+            double aec = (tstt - sptt)/total_demand;
             
-            System.out.println("ITERATION "+iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap));
+            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap)+"\t"+String.format("%.4f", aec));
             
             //printLinkFlows();
             
@@ -683,7 +697,10 @@ public class Network
             {
                 Params.pas_cost_mu /= 10;
                 Params.line_search_gap /= 10;
-                System.out.println("Adjusting parameters due to small gap");
+                
+                if(Params.PRINT_PAS_INFO){
+                    System.out.println("Adjusting parameters due to small gap");
+                }
             }
         }
         
@@ -691,7 +708,7 @@ public class Network
             // for every active PAS
                 // redistribute flows between origins by the proportionality condition
                 
-        System.out.println("TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9));
+        System.out.println("TAPAS TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9)+"s");
     }
 
     public void algorithmB(int max_iter, double min_gap)
@@ -725,7 +742,7 @@ public class Network
         }
         while(gap > min_gap && iter < max_iter);
 
-        System.out.println("TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9));
+        System.out.println("ALG B TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9)+"s");
     }
 
     public double getTSTT(){

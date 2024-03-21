@@ -569,10 +569,19 @@ public class Bush
                     // should check if we can borrow one from network
                     PAS fromNetwork = network.findPAS(l, this);
                     if(fromNetwork == null){
-                        System.out.println("Create PAS for "+l);
+                        
+                        if(Params.PRINT_PAS_INFO){
+                            System.out.println("Create PAS for "+l);
+                        }
+                        
+                        
                         if(createPAS(minPathTree, l, getFlow(l)*Params.pas_flow_mu) == null){
                             // branch shift
-                            System.out.println("branch shift!");
+                            if(Params.PRINT_PAS_INFO){
+                                System.out.println("branch shift!");
+                            }
+                            
+                            
                             Branch branch = createBranch(l);
                             
                             branches.add(branch);
@@ -580,7 +589,11 @@ public class Bush
                         }
                     }
                     else{
-                        System.out.println("Take PAS for "+l);
+                        if(Params.PRINT_PAS_INFO){
+                            System.out.println("Take PAS for "+l);
+                        }
+                        
+                        
                         fromNetwork.addRelevantOrigin(origin);
                     }
                 }
@@ -638,7 +651,9 @@ public class Bush
         // min path to a.dest
         Set<Node> minPath = minPathTree.getPathAsNodeSet(a.getDest());
         
-        System.out.println("minPath is "+minPath);
+        if(Params.PRINT_PAS_INFO){
+            System.out.println("minPath is "+minPath);
+        }
         
         // store trace to avoid repeating breadth first search
         Map<Link, Link> trace = new HashMap<>();
@@ -692,7 +707,9 @@ public class Bush
         output.setStart(firstSimilar.getDest());
         output.addRelevantOrigin(origin);
         
-        System.out.println("PAS is "+output);
+        if(Params.PRINT_PAS_INFO){
+            System.out.println("PAS is "+output);
+        }
         
         network.addPAS(output);
         

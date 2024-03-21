@@ -19,12 +19,12 @@ public class Main {
     public static void main(String[] args) throws IOException
     {
         
-        Network test = new Network("grid3_2dest");
+        Network test = new Network("grid3_2od");
         
         
-        Bush bush = new Bush((Zone)test.findNode(1), test);
+        //Bush bush = new Bush((Zone)test.findNode(1), test);
         
-        test.frankWolfe(5, 0);
+        test.frankWolfe(100, 1E-4);
  
         
         
@@ -63,7 +63,7 @@ public class Main {
 
         //bush.removeCycles();
         //test.printLinkFlows();
-        test.tapas(5, 0);
+        test.tapas(100, 1E-4);
         
         //System.out.println("flow conservation "+bush.validateFlowConservation());
 

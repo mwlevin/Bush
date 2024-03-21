@@ -20,6 +20,8 @@ public class Params
     
     public static final boolean DEBUG_CHECKS = true;
     
+    public static final boolean PRINT_PAS_INFO = false;
+    
     
     public static double tapas_equilibrate_iter = 3;
     
@@ -29,4 +31,8 @@ public class Params
     
     public static final boolean printBushEquilibrate = false;
     public static final boolean printReducedCosts = false;
+    
+    
+    
+    
 }

@@ -215,8 +215,9 @@ public class Branch {
         
         propAddFlow(bot);
         
-        System.out.println("after shift is "+getAvgTT(0)+" "+getMinTT(0)+" "+maxflow);
-        
+        if(Params.PRINT_PAS_INFO){
+            System.out.println("after shift is "+getAvgTT(0)+" "+getMinTT(0)+" "+maxflow);
+        }
         
         
         return top;
