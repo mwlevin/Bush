@@ -24,7 +24,7 @@ public class Main {
         
         //Bush bush = new Bush((Zone)test.findNode(1), test);
         
-        test.frankWolfe(100, 1E-4);
+        test.frankWolfe(100000, 1E-4);
  
         
         

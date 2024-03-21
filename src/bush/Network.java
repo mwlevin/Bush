@@ -486,8 +486,14 @@ public class Network
             gap = (tstt - sptt)/tstt;
             double aec = (tstt - sptt)/total_demand;
             
+            if(gap < Params.line_search_gap*100)
+            {
+                Params.line_search_gap /= 10;
+                
+            }
+            
             System.out.println(iter+"\t"+String.format("%.4f", lambda)+"\t"+String.format("%.1f", tstt)+
-                    "\t"+String.format("%.1f", sptt)+"\t"+String.format("%.4f", gap)+"\t"+String.format("%.4f", aec));
+                    "\t"+String.format("%.1f", sptt)+"\t"+String.format("%.5f", gap)+"\t"+String.format("%.5f", aec));
         }
         while((gap > min_gap || iter == 1) && iter < max_iter);
 
@@ -549,7 +555,7 @@ public class Network
             double top = 1;
             double mid = 0.5;
             
-            while(top - bot > 0.001)
+            while(top - bot > Params.line_search_gap)
             {
                 //System.out.println(bot+" "+mid+" "+top);
                 mid = (bot + top)/2;
@@ -681,7 +687,7 @@ public class Network
             double gap = (tstt - sptt)/tstt;
             double aec = (tstt - sptt)/total_demand;
             
-            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.4f", gap)+"\t"+String.format("%.4f", aec));
+            System.out.println(iter+"\t"+String.format("%.2f", tstt)+"\t"+String.format("%.2f", sptt)+"\t"+String.format("%.5f", gap)+"\t"+String.format("%.5f", aec));
             
             //printLinkFlows();
             
