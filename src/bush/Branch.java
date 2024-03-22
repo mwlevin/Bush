@@ -97,7 +97,7 @@ public class Branch {
         // use flow epsilon to avoid numerical error causing infinite loop
         while(maxflow - assignedFlow > Params.flow_epsilon){
             
-            //System.out.println(maxflow+" "+assignedFlow);
+            System.out.println(maxflow+" "+assignedFlow);
             
             // DFS find path
             unvisited.clear();

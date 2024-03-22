@@ -19,7 +19,7 @@ public class Main {
     public static void main(String[] args) throws IOException
     {
         
-        Network test = new Network("Anaheim");
+        Network test = new Network("Winnipeg");
         
         
         //Bush bush = new Bush((Zone)test.findNode(1), test);

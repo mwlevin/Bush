@@ -685,9 +685,10 @@ public class Bush
                 break;
             }
             
+            
             for(Link ij : j.getIncoming()){
                 
-                if(getFlow(ij) > minflow){
+                if(getFlow(ij) > minflow && ij.getSource().top_order < j.top_order){
                     unvisited.add(ij);
                     trace.put(ij, jk);
                 }
@@ -714,7 +715,8 @@ public class Bush
         Link curr = firstSimilar;
         output.addBackwardLink(firstSimilar);
         while(curr != a){
- 
+            
+            //System.out.println("\t"+curr);
             curr = trace.get(curr);
             output.addBackwardLink(curr);
             

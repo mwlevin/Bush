@@ -24,7 +24,7 @@ public class Params
         bush_gap = 0.001;
         pas_cost_mu = 0.05;
         pas_flow_mu = 0.025;
-        flow_epsilon = 0.0001;
+        flow_epsilon = 0.1;
         line_search_gap = 0.1;
         tapas_equilibrate_iter = 3;
     }
