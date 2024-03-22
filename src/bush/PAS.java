@@ -33,6 +33,14 @@ public class PAS {
         relevant = new HashSet<>();
     }
     
+    public List<Link> getBackwardsLinks(){
+        return backwardlinks;
+    }
+    
+    public List<Link> getForwardsLinks(){
+        return forwardlinks;
+    }
+    
     public Set<Zone> getRelevantOrigins(){
         return relevant;
     }

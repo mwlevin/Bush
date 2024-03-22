@@ -556,45 +556,57 @@ public class Bush
         
         Tree minPathTree = network.getSPTree(origin);
         
+        // only create 1 PAS per link per origin per iteration
+        Set<Link> included = new HashSet<>();
         
         // look for all used links not part of the tree of least cost routes
-        for(Link l : network.links){
-            // check for links with high reduced cost and positive flow, not just links not on the shortest path
-            if(l.getDest() != origin && l.getSource() != origin && getFlow(l) > Params.flow_epsilon && l.hasHighReducedCost(Params.pas_cost_mu)){
-                
-                //System.out.println(l+" "+l.getDest().cost+" "+l.getSource().cost+" "+(l.getDest().cost-l.getSource().cost)+" "+l.getTT());
-                // we need a PAS!
-                if(!hasRelevantPAS(l)){
-                    
-                    // should check if we can borrow one from network
-                    PAS fromNetwork = network.findPAS(l, this);
-                    if(fromNetwork == null){
-                        
-                        if(Params.PRINT_PAS_INFO){
-                            System.out.println("\nCreate PAS for "+l+" for origin "+getOrigin());
-                        }
-                        
-                        
-                        if(createPAS(minPathTree, l, getFlow(l)*Params.pas_flow_mu) == null){
-                            // branch shift
+        // search in backwards topological order
+        for(int i = sorted.size()-1; i >= 0; i--){
+            Node n = sorted.get(i);
+        
+            for(Link l : n.getIncoming()){
+                // check for links with high reduced cost and positive flow, not just links not on the shortest path
+                if(!included.contains(l) && l.getDest() != origin && l.getSource() != origin && getFlow(l) > Params.flow_epsilon && l.hasHighReducedCost(Params.pas_cost_mu)){
+
+                    //System.out.println(l+" "+l.getDest().cost+" "+l.getSource().cost+" "+(l.getDest().cost-l.getSource().cost)+" "+l.getTT());
+                    // we need a PAS!
+                    if(!hasRelevantPAS(l)){
+
+                        // should check if we can borrow one from network
+                        PAS fromNetwork = network.findPAS(l, this);
+                        if(fromNetwork == null){
+
                             if(Params.PRINT_PAS_INFO){
-                                System.out.println("branch shift!");
+                                System.out.println("\nCreate PAS for "+l+" for origin "+getOrigin());
                             }
-                            
-                            
-                            Branch branch = createBranch(l);
-                            
-                            branches.add(branch);
-                            
+
+                            PAS newPAS = createPAS(minPathTree, l, getFlow(l)*Params.pas_flow_mu);
+                            if(newPAS == null){
+                                // branch shift
+                                if(Params.PRINT_PAS_INFO){
+                                    System.out.println("branch shift!");
+                                }
+
+
+                                Branch branch = createBranch(l);
+
+                                branches.add(branch);
+
+                            }
+                            else{
+                                for(Link ij : newPAS.getBackwardsLinks()){
+                                    included.add(ij);
+                                }
+                            }
                         }
-                    }
-                    else{
-                        if(Params.PRINT_PAS_INFO){
-                            System.out.println("Take PAS for "+l);
+                        else{
+                            if(Params.PRINT_PAS_INFO){
+                                System.out.println("Take PAS for "+l);
+                            }
+
+
+                            fromNetwork.addRelevantOrigin(origin);
                         }
-                        
-                        
-                        fromNetwork.addRelevantOrigin(origin);
                     }
                 }
             }
