@@ -614,6 +614,8 @@ public class Network
     }
     
     public void reset(){
+        Params.resetParams();
+        
         for(Zone r : origins){
             r.bush = null;
         }
@@ -635,7 +637,8 @@ public class Network
         
         createBushAON();
         
-    
+        Params.line_search_gap = Math.pow(10, Math.floor(Math.log10(total_demand) - 6));
+        //System.out.println(Params.line_search_gap);
         
         // repeat iteratively:
         for(iter = 1; iter <= max_iter; iter++){
@@ -713,7 +716,7 @@ public class Network
             // for every active PAS
                 // redistribute flows between origins by the proportionality condition
                 
-        System.out.println("TAPAS TIME: "+String.format("%.2f", (System.nanoTime() - time) / 1.0e9)+"s");
+        System.out.println("TAPAS TIME: "+String.format("%.4f", (System.nanoTime() - time) / 1.0e9)+"s");
     }
 
     public void algorithmB(int max_iter, double min_gap)
