@@ -110,7 +110,7 @@ public class Network
         
         for(Node n : nodes)
         {
-            if(n != r){
+            if(n != r && n.cost < Params.INFTY){
                 output.put(n.pred);
             }
         }
@@ -316,6 +316,9 @@ public class Network
             if(b == 4)
             {
                 l = new BPRLink4(i, j, tf, Q, a, b, len);
+            }
+            else if(b == 1){
+                l = new BPRLink1(i, j, tf, Q, a, b, len);
             }
             else
             {
