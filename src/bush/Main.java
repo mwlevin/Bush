@@ -19,12 +19,12 @@ public class Main {
     public static void main(String[] args) throws IOException
     {
         
-        Network test = new Network("Winnipeg");
+        Network test = new Network("Barcelona");
         
         
         //Bush bush = new Bush((Zone)test.findNode(1), test);
         
-        test.frankWolfe(100000, 1E-4);
+        
  
         
         
@@ -69,6 +69,7 @@ public class Main {
         
         test.tapas(100, 1E-4);
         
+        test.frankWolfe(100000, 1E-4);
         //System.out.println("flow conservation "+bush.validateFlowConservation());
 
         

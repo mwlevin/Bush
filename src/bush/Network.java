@@ -34,9 +34,11 @@ public class Network
     
     private PASList allPAS;
     private int iter;
+    private String name;
     
     public Network(String name) throws IOException
     {
+        this.name = name;
         readNetwork(name);
         
         allPAS = new PASList();
@@ -424,7 +426,7 @@ public class Network
         }
         filein.close();
         
-        System.out.println("Demand: "+Math.round(total_demand));
+        System.out.println(name+" Demand: "+Math.round(total_demand));
 
     }    
 
@@ -474,6 +476,7 @@ public class Network
         double gap = Params.INFTY;
         iter = 0;
         
+        System.out.println("Running FW on "+name);
         System.out.println("Iter\tStep size\tTSTT\tSPTT\tGap\tAEC");
         
         do
@@ -636,6 +639,7 @@ public class Network
         
         long time = System.nanoTime();
         
+        System.out.println("Running TAPAS on "+name);
         System.out.println("Iter\tTSTT\tSPTT\tGap\tAEC");
         
         createBushAON();
@@ -733,6 +737,7 @@ public class Network
         
         double gap = Params.INFTY;
         
+        System.out.println("Running Algorithm B on "+name);
         System.out.println("Iter\tAEC");
         
         iter = 0;

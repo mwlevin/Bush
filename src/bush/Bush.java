@@ -28,7 +28,6 @@ public class Bush
     private Zone origin;
 
     private double[] flow; // use the indices of each link
-    private boolean[] contains; 
     
     protected Network network;
     
@@ -51,7 +50,7 @@ public class Bush
         
         sorted = new ArrayList<Node>();
         flow = new double[network.getLinks().length];
-        contains = new boolean[network.getLinks().length];
+        //contains = new boolean[network.getLinks().length];
         
         loadDemand();
     }
@@ -68,10 +67,13 @@ public class Bush
         return flow[l.getIdx()];
     }
     
+    public boolean contains(int linkidx){
+        return flow[linkidx] > Params.flow_epsilon;
+    }
     
     public boolean contains(Link l)
     {
-        return contains[l.getIdx()];
+        return flow[l.getIdx()] > Params.flow_epsilon;
     }
     
     public boolean contains(Node n){
@@ -202,7 +204,7 @@ public class Bush
         
         for(int idx = 0; idx < flow.length; idx++)
         {
-            if(!contains[idx])
+            if(!contains(idx))
             {
                 continue;
             }
@@ -258,7 +260,7 @@ public class Bush
     {
         for(int idx = 0; idx < flow.length; idx++)
         {
-            if(!contains[idx])
+            if(!contains(idx))
             {
                 continue;
             }
@@ -837,7 +839,7 @@ public class Bush
         for(Link l : network.links){
             int i = l.getIdx();
             l.addX(newflow[i] - flow[i]);
-            contains[i] = newflow[i] > Params.flow_epsilon;
+            //contains[i] = newflow[i] > Params.flow_epsilon;
         }
         
         flow = newflow;
@@ -1354,10 +1356,9 @@ public class Bush
         for(Link l : remove)
         {
             flow[l.getIdx()] = 0;
-            contains[l.getIdx()] = false;
         }
         
-
+        /*
         for(int idx = 0; idx < network.links.length; idx++)
         {
             Link l = network.links[idx];
@@ -1366,6 +1367,7 @@ public class Bush
                 contains[idx] = true;
             }
         }
+        */
         
         topologicalSort();
     }
@@ -1442,11 +1444,13 @@ public class Bush
             throw new RuntimeException("flow="+x);
         }
         l.addX(x);
-        flow[l.getIdx()] += x;
         
-        contains[l.getIdx()] = flow[l.getIdx()] > Params.flow_epsilon;
+        int idx = l.getIdx();
+        flow[idx] += x;
         
-        return contains[l.getIdx()];
+        //contains[l.getIdx()] = flow[l.getIdx()] > Params.flow_epsilon;
+        
+        return contains(idx);
     }
     
     // maybe store this as a map<Link, list<PAS>> mapping end link of PAS

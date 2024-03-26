@@ -164,23 +164,12 @@ public class Branch {
     }
     
     
-
-
-    
     public String toString(){
         return endlink+" : "+linkflows.toString()+" ; "+minpath;
     }
-    
-
-    
-    
-
+  
     
     public double flowShift(){
-        
-        
-        
-        
         double avgTT = getAvgTT(0);
         double minTT = getMinTT(0);
         
@@ -291,6 +280,11 @@ public class Branch {
         
         for(Link l : minpath){
             bush.addFlow(l, shift);
+            
+            // this isn't needed: the branch will be discarded after equilibrating.
+            if(Params.DEBUG_CHECKS){
+                linkflows.put(l, linkflows.get(l) + shift);
+            }
         }
         
         maxflow -= shift;
