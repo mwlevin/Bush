@@ -115,7 +115,12 @@ public class PAS {
         double minflow = Double.MAX_VALUE; 
         double flowlastsegment = 0;
         
-        for(Link l : backwardlinks){
+        List<Link> lookat = backwardlinks;
+        if(isBackwards()){
+            lookat = forwardlinks;
+        }
+        
+        for(Link l : lookat){
             // only look at high cost segment
             double totalFlow = 0;
             for(Zone r : relevant){
@@ -127,6 +132,8 @@ public class PAS {
                 flowlastsegment = totalFlow;
             }
         }
+        
+        
         
         return minflow >= Params.pas_flow_mu * flowlastsegment;
         
@@ -141,7 +148,7 @@ public class PAS {
         double costdiff = backwardcost - forwardcost;
         
         // maybe the forward and backward costs will be reversed sometimes
-        return Math.abs(costdiff) > Params.pas_cost_mu * forwardcost;
+        return costdiff > Params.pas_cost_mu * forwardcost || -costdiff > Params.pas_cost_mu * backwardcost;
     }
     
     public boolean isCostEffective(Link a){
@@ -154,13 +161,15 @@ public class PAS {
         
         if(a == getEndLinkBwd()){
             costdiff = backwardcost - forwardcost;
+            return costdiff > Params.pas_cost_mu * forwardcost;
         }
         else if(a == getEndLinkFwd()){
             costdiff = forwardcost - backwardcost;
+            return costdiff > Params.pas_cost_mu * backwardcost;
         }
         
         // maybe the forward and backward costs will be reversed sometimes
-        return costdiff > Params.pas_cost_mu * forwardcost;
+        return false;
     }
     
     public double getForwardCost(){
@@ -233,6 +242,12 @@ public class PAS {
     
     }
     
+    public boolean isBackwards(){
+        double forwardcost = getForwardCost();
+        double backwardcost = getBackwardCost();
+        
+        return backwardcost < forwardcost;
+    }
     public boolean flowShift(){
         
         double forwardcost = getForwardCost();
