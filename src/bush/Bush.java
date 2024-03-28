@@ -90,14 +90,24 @@ public class Bush
         return false;
     }
     
-    
+    public int getIncomingCount(Node n){
+        int output = 0;
+        
+        for(Link i : n.getIncoming()){
+            if(contains(i)){
+                output++;
+            }
+        }
+        
+        return output;
+    }
     
     public void topologicalSort()
     {
         
         for(Node n : network.nodes)
         {
-            n.in_degree = n.getBushIncoming(this).size();
+            n.in_degree = getIncomingCount(n);
             n.visited = false;
             n.top_order = -1;
         }
@@ -118,8 +128,11 @@ public class Bush
             vertex.top_order = idx;
             idx++;
             
-            for(Link ij : vertex.getBushOutgoing(this))
+            for(Link ij : vertex.getOutgoing())
             {
+                if(!contains(ij)){
+                    continue;
+                }
                 Node j = ij.getDest();
                 
                 
@@ -290,9 +303,9 @@ public class Bush
         
         for(Node u : sorted)
         {
-            for(Link uv : u.getBushOutgoing(this))
+            for(Link uv : u.getOutgoing())
             {
-                if(flow[uv.getIdx()] == 0)
+                if(flow[uv.getIdx()] < Params.flow_epsilon)
                 {
                     continue;
                 }
@@ -525,9 +538,11 @@ public class Bush
         for(Node u : sorted)
         {
             
-            for(Link uv : u.getBushOutgoing(this))
+            for(Link uv : u.getOutgoing())
             {
-                
+                if(getFlow(uv) < Params.flow_epsilon){
+                    continue;
+                }
                 Node v = uv.getDest();
                 
                 double temp = uv.getTT() + u.cost;
@@ -1014,9 +1029,9 @@ public class Bush
         
         for(Node u : sorted)
         {
-            for(Link uv : u.getBushOutgoing(this))
+            for(Link uv : u.getOutgoing())
             {
-                if(flow[uv.getIdx()] == 0)
+                if(flow[uv.getIdx()] < Params.flow_epsilon)
                 {
                     continue;
                 }
