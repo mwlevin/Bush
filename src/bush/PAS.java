@@ -256,11 +256,14 @@ public class PAS {
         double costdiff = backwardcost - forwardcost;
         
         // maybe the forward and backward costs will be reversed sometimes
-        if(Math.abs(costdiff) < Params.pas_cost_mu * forwardcost){
-            return false;
-        }
+
         
         int backwards = (backwardcost > forwardcost ? 1:-1);
+        
+        if( (backwards == 1 && costdiff < Params.pas_cost_mu * forwardcost) || (backwards == -1 && -costdiff < Params.pas_cost_mu * backwardcost) )
+        {
+            return false;
+        }
 
         
         double overallMaxShift = 0;

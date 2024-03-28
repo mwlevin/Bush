@@ -209,7 +209,7 @@ public class Branch {
         }
         
         
-        return top;
+        return bot;
 
     }
     
