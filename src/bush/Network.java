@@ -676,12 +676,15 @@ public class Network
 
             }
             
+            
             // for every active PAS
+            
+            // check if it should be eliminated
+            removePAS();
             
             boolean modified = false;
             for(int shiftIter = 0; shiftIter <= Params.tapas_equilibrate_iter; shiftIter++){
-                // check if it should be eliminated
-                removePAS();
+                
                 // perform flow shift to equilibrate costs
                 modified = equilibratePAS();
                 // redistribute flows between origins by the proportionality condition
