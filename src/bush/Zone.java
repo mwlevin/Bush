@@ -5,13 +5,16 @@
  */
 package bush;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author micha
  */
 public class Zone extends Node implements Dest
 {
-    protected double[] demand; // indexed to zones
+    protected Map<Dest, Double> demand;
     private double totaldemand;
     
     protected Bush bush;
@@ -19,10 +22,12 @@ public class Zone extends Node implements Dest
     public Zone(int id, int numDests)
     {
         super(id);
-        demand = new double[numDests];
+        demand = new HashMap<>();
+
+        
         totaldemand = 0;
     }
-    
+    /*
     public double[] copyDemand(){
         double[] output = new double[demand.length];
         
@@ -32,10 +37,22 @@ public class Zone extends Node implements Dest
         
         return output;
     }
+*/
+    
+    public Map<Dest, Double> copyDemand(){
+        Map<Dest, Double> output = new HashMap<>();
+        
+        for(Dest s : demand.keySet()){
+            output.put(s, demand.get(s));
+        }
+        
+        return output;
+    }
     
     public double getDemand(Dest s)
     {
-        return demand[s.getDestIdx()];
+        //return demand[s.getDestIdx()];
+        return demand.get(s);
     }
     
     public double getTotalDemand(){
@@ -44,9 +61,8 @@ public class Zone extends Node implements Dest
     
     public void setDemand(Dest s, double d)
     {
-        int i = s.getDestIdx();
-        totaldemand += d - demand[i];
-        demand[i] = d;
+        totaldemand += d - demand.get(s);
+        demand.put(s, d);
     }
     
     public int getDestIdx()
